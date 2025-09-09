@@ -3,7 +3,6 @@ import asyncio
 from pathlib import Path
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, UploadFile
-
 from app.models.user import User
 from app.models.conversion import Conversion
 from app.crud.conversion import conversion as conversion_crud
@@ -12,10 +11,8 @@ from app.schemas.conversion import TextToSpeechRequest
 from app.services.ocr_service import OCRProcessor
 from app.services.tts_service import TTSProcessor
 
-
 class ConversionService:
     """Service class to handle conversion-related operations."""
-    
     def __init__(self, db: Session, current_user: User):
         self.db = db
         self.current_user = current_user
@@ -26,15 +23,12 @@ class ConversionService:
         """Convert PDF file to audio."""
         if not file.filename.lower().endswith(".pdf"):
             raise HTTPException(400, "Only PDF files are accepted")
-        
         file_path = settings.UPLOAD_DIR / file.filename
         try:
             content = await file.read()
             file_path.write_bytes(content)
-            
             full_text, lang = await self.ocr.pdf_to_text(file_path, language)
             audio_file_path = await self.tts.text_to_audio(full_text, lang)
-            
             conv = conversion_crud.create_with_owner(
                 db=self.db,
                 obj_in={
@@ -56,18 +50,14 @@ class ConversionService:
         allowed_exts = (".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp")
         if not any(file.filename.lower().endswith(ext) for ext in allowed_exts):
             raise HTTPException(400, f"Only image files {', '.join(allowed_exts)} are accepted")
-        
         file_path = settings.UPLOAD_DIR / file.filename
         try:
             content = await file.read()
             file_path.write_bytes(content)
-            
             text, lang = await self.ocr.image_to_text(file_path, language)
             if not text:
-                raise HTTPException(422, "Could not extract text from the image")
-            
-            audio_file_path = await self.tts.text_to_audio(text, lang)
-            
+                raise HTTPException(422, "Could not extract text from the image")         
+            audio_file_path = await self.tts.text_to_audio(text, lang)            
             conv = conversion_crud.create_with_owner(
                 db=self.db,
                 obj_in={
@@ -86,8 +76,7 @@ class ConversionService:
 
     async def convert_text(self, request: TextToSpeechRequest) -> Conversion:
         """Convert text to audio."""
-        audio_file_path = await self.tts.text_to_audio(request.text, request.language)
-        
+        audio_file_path = await self.tts.text_to_audio(request.text, request.language)       
         conv = conversion_crud.create_with_owner(
             db=self.db,
             obj_in={
@@ -124,12 +113,10 @@ class ConversionService:
 
     def delete_conversion(self, conversion_id: int):
         """Delete a conversion by ID."""
-        conv = self.get_conversion_by_id(conversion_id)
-        
+        conv = self.get_conversion_by_id(conversion_id)      
         # Delete audio file if it exists
         file_path = Path(conv.audio_file_path)
         if file_path.exists():
             os.unlink(file_path)
-        
         # Delete from database
         conversion_crud.remove(self.db, id=conv.id)

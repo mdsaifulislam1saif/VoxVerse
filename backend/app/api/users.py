@@ -8,7 +8,6 @@ from app.services.user_service import UserService
 
 router = APIRouter()
 
-
 @router.get("/me", response_model=UserSchema)
 def read_current_user(
     db: Session = Depends(get_db),
@@ -17,7 +16,6 @@ def read_current_user(
     """Get current user profile."""
     service = UserService(db=db, current_user=current_user)
     return service.get_me()
-
 
 @router.put("/me", response_model=UserSchema)
 def update_current_user(

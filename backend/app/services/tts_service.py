@@ -9,7 +9,6 @@ from app.config.config import settings
 
 class TTSProcessor:
     """Class to handle text-to-speech conversion using Coqui TTS."""
-
     LANG_TO_MODEL = {
         'en': 'tts_models/en/ljspeech/fast_pitch',
         'fr': 'tts_models/fr/mai/tacotron2-DDC',
@@ -44,7 +43,6 @@ class TTSProcessor:
         'fa': 'tts_models/fa/custom/glow-tts',
         'be': 'tts_models/be/common-voice/glow-tts'
     }
-
     thread_pool = ThreadPoolExecutor()
 
     def __init__(self, device: str = settings.DEVICE):
@@ -68,14 +66,11 @@ class TTSProcessor:
         model_name = self.LANG_TO_MODEL.get(
             lang, 'tts_models/multilingual/multi-dataset/your_tts'
         )
-
         settings.AUDIO_DIR.mkdir(parents=True, exist_ok=True)
-
         for attempt in range(max_retries):
             try:
                 # Load TTS model
                 tts = await self._run_in_thread(lambda: TTS(model_name=model_name).to(self.device))
-
                 # Save audio file
                 output_file = settings.AUDIO_DIR / f"Audio_{lang}_{uuid.uuid4()}.wav"
                 await self._run_in_thread(
@@ -90,16 +85,14 @@ class TTSProcessor:
                     await asyncio.sleep(retry_delay)
                 else:
                     raise RuntimeError(f"Failed to generate audio after {max_retries} attempts") from e
+# async def main():
+#     tts = TTSProcessor()
+#     audio_file = await tts.text_to_audio(
+#         "এখানে আমি ভাত খাই একটি সম্পূর্ণ অর্থ প্রকাশ করে, তাই এটি একটি বাক্য।",
+#         lang="bn"
+#     )
+#     print("Audio generated successfully:", audio_file)
 
 
-async def main():
-    tts = TTSProcessor()
-    audio_file = await tts.text_to_audio(
-        "এখানে আমি ভাত খাই একটি সম্পূর্ণ অর্থ প্রকাশ করে, তাই এটি একটি বাক্য।",
-        lang="bn"
-    )
-    print("Audio generated successfully:", audio_file)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+# if __name__ == "__main__":
+#     asyncio.run(main())

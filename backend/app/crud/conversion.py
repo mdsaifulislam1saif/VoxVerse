@@ -6,13 +6,11 @@ from app.crud.base import CRUDBase
 
 class CRUDConversion(CRUDBase[Conversion, ConversionCreate, ConversionUpdate]):
     """CRUD operations for Conversion model."""
-
     def create_with_owner(
         self, db: Session, *, obj_in: dict, user_id: int, audio_file_path: str
     ) -> Conversion:
         """
         Create a new conversion associated with a user.
-
         Args:
             db: SQLAlchemy session
             obj_in: Dictionary of conversion fields
@@ -34,7 +32,6 @@ class CRUDConversion(CRUDBase[Conversion, ConversionCreate, ConversionUpdate]):
     ) -> List[Conversion]:
         """
         Retrieve multiple conversions belonging to a specific user.
-
         Args:
             db: SQLAlchemy session
             user_id: Owner's user ID

@@ -6,10 +6,8 @@ from app.crud.user import user as user_crud, authenticate_user
 from app.database.database import get_db
 from app.schemas.user import Token, UserCreate, User as UserSchema
 
-
 class AuthenticationService:
     """Service class for user registration and authentication."""
-
     def __init__(self, db: Session):
         self.db = db
         self.security = SecurityService()
@@ -22,14 +20,12 @@ class AuthenticationService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
-        
         # Check if username exists
         if user_crud.get_by_username(self.db, username=user_in.username):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Username already taken"
             )
-        
         # Create and return new user
         return user_crud.create(self.db, obj_in=user_in)
 
@@ -42,7 +38,6 @@ class AuthenticationService:
                 detail="Incorrect username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
         access_token = self.security.create_access_token(subject=db_user.username)
         return {"access_token": access_token, "token_type": "bearer"}
 

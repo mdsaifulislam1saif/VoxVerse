@@ -11,18 +11,15 @@ import io
 
 class OCRProcessor:
     """OCR processor for images and PDFs with dynamic language support."""
-
     SUPPORTED_LANGUAGES = {
         "bn", "ja", "zh-cn", "zh-tw", "ko", "ru", "bg", "be", "uk",
         "cs", "pl", "sk", "da", "no", "sv", "nl", "de", "fr", "it",
         "es", "pt", "en"
     }
-
     thread_pool = ThreadPoolExecutor()
-
     def __init__(self):
         self.reader_cache = {}
-
+        
     async def _run_in_thread(self, fn, *args, **kwargs):
         return await asyncio.get_running_loop().run_in_executor(
             self.thread_pool, partial(fn, *args, **kwargs)

@@ -6,7 +6,6 @@ from app.config.config import settings
 
 class SecurityService:
     """Service class to handle password hashing, verification, and JWT token creation."""
-    
     def __init__(self):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

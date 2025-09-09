@@ -9,7 +9,6 @@ security = SecurityService()
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """CRUD operations for User model."""
-
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         """Create a new user with hashed password."""
         db_obj = User(

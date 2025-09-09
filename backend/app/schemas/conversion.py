@@ -52,6 +52,7 @@ class ConversionSummary(BaseModel):
     summary_type: Optional[str] = None
     created_at: datetime
     audio_duration: Optional[float] = None  # if you want to track audio length
-
+    
     class Config:
         from_attributes = True
+
