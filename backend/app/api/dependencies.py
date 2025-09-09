@@ -14,8 +14,9 @@ class ConversionService:
     including access control by the authenticated user.
     """
 
-    def __init__(self, db: Session = Depends(get_db)):
+    def __init__(self, db: Session, current_user: User):
         self.db = db
+        self.current_user = current_user
 
     def get_conversion_by_id(
         self,

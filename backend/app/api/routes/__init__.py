@@ -1,4 +1,3 @@
-# Import routers
-from app.api.routes.auth import router as auth_router
-from app.api.routes.users import router as users_router
-from app.api.routes.convert import router as convert_router
+# from .auth import router as auth_router
+# from .users import router as users_router
+# from .convert import router as convert_router

@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 from TTS.api import TTS
-from app.config.config import settings 
+from app.config.config import settings
 
 class TTSProcessor:
     """Class to handle text-to-speech conversion using Coqui TTS."""
@@ -22,7 +22,7 @@ class TTSProcessor:
         'tr': 'tts_models/tr/common-voice/glow-tts',
         'ja': 'tts_models/ja/kokoro/tacotron2-DDC',
         'zh-cn': 'tts_models/zh-CN/baker/tacotron2-DDC-GST',
-        'bn': 'tts_models/bn/custom/vits-male',  
+        'bn': 'tts_models/bn/custom/vits-male',
         'bg': 'tts_models/bg/cv/vits',
         'cs': 'tts_models/cs/cv/vits',
         'da': 'tts_models/da/cv/vits',
@@ -70,10 +70,13 @@ class TTSProcessor:
         )
 
         settings.AUDIO_DIR.mkdir(parents=True, exist_ok=True)
-        
+
         for attempt in range(max_retries):
             try:
+                # Load TTS model
                 tts = await self._run_in_thread(lambda: TTS(model_name=model_name).to(self.device))
+
+                # Save audio file
                 output_file = settings.AUDIO_DIR / f"Audio_{lang}_{uuid.uuid4()}.wav"
                 await self._run_in_thread(
                     tts.tts_to_file,
@@ -87,3 +90,16 @@ class TTSProcessor:
                     await asyncio.sleep(retry_delay)
                 else:
                     raise RuntimeError(f"Failed to generate audio after {max_retries} attempts") from e
+
+
+async def main():
+    tts = TTSProcessor()
+    audio_file = await tts.text_to_audio(
+        "এখানে আমি ভাত খাই একটি সম্পূর্ণ অর্থ প্রকাশ করে, তাই এটি একটি বাক্য।",
+        lang="bn"
+    )
+    print("Audio generated successfully:", audio_file)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
