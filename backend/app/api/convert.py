@@ -1,5 +1,7 @@
 from typing import List
-from fastapi import APIRouter, Depends, UploadFile, File, Form, status, Body
+from pathlib import Path
+from fastapi import APIRouter, Depends, UploadFile, File, Form, status, Body, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.core.auth import auth_service
 from app.database.database import get_db
@@ -61,6 +63,84 @@ def get_conversion_route(
     """Get a specific conversion."""
     service = ConversionService(db, current_user)
     return service.get_conversion_by_id(conversion_id)
+
+@router.get("/{conversion_id}/download")
+def download_audio(
+    conversion_id: int,
+    inline: bool = False,
+    current_user: User = Depends(auth_service.get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Download or stream the audio file for a conversion."""
+    service = ConversionService(db, current_user)
+    conversion = service.get_conversion_by_id(conversion_id)
+    
+    file_path = Path(conversion.audio_file_path)
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Audio file not found"
+        )
+    
+    # Determine media type based on file extension
+    media_type = "audio/wav"  # default
+    if file_path.suffix.lower() == ".mp3":
+        media_type = "audio/mpeg"
+    elif file_path.suffix.lower() == ".ogg":
+        media_type = "audio/ogg"
+    elif file_path.suffix.lower() == ".m4a":
+        media_type = "audio/mp4"
+    elif file_path.suffix.lower() == ".flac":
+        media_type = "audio/flac"
+    
+    # Generate a clean filename
+    clean_filename = f"{conversion.file_name}_{conversion.id}{file_path.suffix}"
+    
+    return FileResponse(
+        file_path,
+        media_type=media_type,
+        filename=clean_filename,
+        # Use inline for streaming in browser, attachment for download
+        headers={"Content-Disposition": f"{'inline' if inline else 'attachment'}; filename={clean_filename}"}
+    )
+
+@router.get("/{conversion_id}/stream")
+def stream_audio(
+    conversion_id: int,
+    current_user: User = Depends(auth_service.get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Stream audio file for web players."""
+    service = ConversionService(db, current_user)
+    conversion = service.get_conversion_by_id(conversion_id)
+    
+    file_path = Path(conversion.audio_file_path)
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Audio file not found"
+        )
+    
+    # Determine media type
+    media_type = "audio/wav"
+    if file_path.suffix.lower() == ".mp3":
+        media_type = "audio/mpeg"
+    elif file_path.suffix.lower() == ".ogg":
+        media_type = "audio/ogg"
+    elif file_path.suffix.lower() == ".m4a":
+        media_type = "audio/mp4"
+    elif file_path.suffix.lower() == ".flac":
+        media_type = "audio/flac"
+    
+    return FileResponse(
+        file_path,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": "inline",
+            "Accept-Ranges": "bytes",  # Enable range requests for better streaming
+            "Cache-Control": "public, max-age=3600"  # Cache for 1 hour
+        }
+    )
 
 @router.delete("/{conversion_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_conversion_route(

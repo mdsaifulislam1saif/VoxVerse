@@ -1,7 +1,8 @@
-from fastapi import APIRouter, UploadFile, File, Form, status, Body
+from fastapi import APIRouter, UploadFile, File, Form, status, Body, HTTPException
 from fastapi.responses import FileResponse
 from app.schemas.summarization import SummarizationResponse, TextSummarizationRequest
 from app.services.summarization_service import SummarizationService
+from app.config.config import settings
 
 router = APIRouter()
 

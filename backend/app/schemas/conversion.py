@@ -42,17 +42,4 @@ class TextToSpeechRequest(BaseModel):
     text: str = Field(..., example="Hello world")
     language: str = Field("en", example="en")
 
-class ConversionSummary(BaseModel):
-    """Schema for conversion summary information."""
-    id: int
-    file_name: str
-    language: str
-    source_type: str
-    is_summarized: bool
-    summary_type: Optional[str] = None
-    created_at: datetime
-    audio_duration: Optional[float] = None  # if you want to track audio length
-    
-    class Config:
-        from_attributes = True
 
