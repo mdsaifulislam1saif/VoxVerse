@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
-from app.api import auth, users, convert, summarize
+from app.api import auth, users, convert, summarize, extract
 from app.config.config import settings
 from app.database.database import Base, engine
 
@@ -33,4 +33,4 @@ app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(convert.router, prefix="/convert", tags=["conversions"])
 app.include_router(summarize.router, prefix="/summarize", tags=["summarization"])
-
+app.include_router(extract.router, prefix="/extract", tags=["extraction"])

@@ -11,27 +11,27 @@ from app.services.conversion_service import ConversionService
 
 router = APIRouter()
 
-@router.post("/pdf", response_model=ConversionSchema, status_code=status.HTTP_201_CREATED)
-async def convert_pdf_route(
-    file: UploadFile = File(...),
-    language: str = Form("en"),
-    current_user: User = Depends(auth_service.get_current_active_user),
-    db: Session = Depends(get_db),
-):
-    """Convert PDF file to audio."""
-    service = ConversionService(db, current_user)
-    return await service.convert_pdf(file, language)
+# @router.post("/pdf", response_model=ConversionSchema, status_code=status.HTTP_201_CREATED)
+# async def convert_pdf_route(
+#     file: UploadFile = File(...),
+#     language: str = Form("en"),
+#     current_user: User = Depends(auth_service.get_current_active_user),
+#     db: Session = Depends(get_db),
+# ):
+#     """Convert PDF file to audio."""
+#     service = ConversionService(db, current_user)
+#     return await service.convert_pdf(file, language)
 
-@router.post("/image", response_model=ConversionSchema, status_code=status.HTTP_201_CREATED)
-async def convert_image_route(
-    file: UploadFile = File(...),
-    language: str = Form("en"),
-    current_user: User = Depends(auth_service.get_current_active_user),
-    db: Session = Depends(get_db),
-):
-    """Convert image file to audio."""
-    service = ConversionService(db, current_user)
-    return await service.convert_image(file, language)
+# @router.post("/image", response_model=ConversionSchema, status_code=status.HTTP_201_CREATED)
+# async def convert_image_route(
+#     file: UploadFile = File(...),
+#     language: str = Form("en"),
+#     current_user: User = Depends(auth_service.get_current_active_user),
+#     db: Session = Depends(get_db),
+# ):
+#     """Convert image file to audio."""
+#     service = ConversionService(db, current_user)
+#     return await service.convert_image(file, language)
 
 @router.post("/text", response_model=ConversionSchema, status_code=status.HTTP_201_CREATED)
 async def convert_text_route(
