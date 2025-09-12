@@ -1,172 +1,42 @@
-import api from './api.js';
+import { apiClient } from './api';
 
-export const getConversions = async () => {
-  const response = await api.get('/convert');
-  return response.data;
+export const convertText = (data) => {
+  return apiClient.post('/convert/text', data);
 };
 
-export const getConversion = async (id) => {
-  const response = await api.get(`/convert/${id}`);
-  return response.data;
+export const getConversions = (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  return apiClient.get(`/convert${query ? `?${query}` : ''}`);
 };
 
-export const deleteConversion = async (id) => {
-  const response = await api.delete(`/convert/${id}`);
-  return response.data;
+export const getConversion = (id) => {
+  return apiClient.get(`/convert/${id}`);
 };
 
-export const downloadAudio = (id) => {
-  const token = localStorage.getItem('token');
-  const baseUrl = api.defaults.baseURL;
-  const downloadUrl = `${baseUrl}/convert/${id}/download`;
-  if (token) {
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    fetch(downloadUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.blob();
-    })
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      link.href = url;
-      link.download = `audio-${id}.wav`;
-      document.body.appendChild(link);
-      link.click();
-      
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
-    })
-    .catch(error => {
-      console.error('Download failed:', error);
-      alert('Download failed. Please try again.');
-    });
-    return null; 
-  } else {
-    return downloadUrl;
+export const downloadAudio = async (id) => {
+  const response = await fetch(`${apiClient.baseURL}/convert/${id}/download`, {
+    headers: apiClient.getAuthHeaders(),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Download failed');
   }
+  
+  return response.blob();
 };
 
-// Get audio URL for streaming/playing in web players
-export const getAudioUrl = (id) => {
-  const baseUrl = api.defaults.baseURL;
-  return `${baseUrl}/convert/${id}/download`;
-};
-
-// Stream audio with authentication headers (for use with audio elements)
-export const getAudioBlob = async (id) => {
-  const token = localStorage.getItem('token');
-  const baseUrl = api.defaults.baseURL;
-  const audioUrl = `${baseUrl}/convert/${id}/download`;
-  try {
-    const response = await fetch(audioUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    } 
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
-  } catch (error) {
-    console.error('Failed to fetch audio:', error);
-    throw error;
+export const streamAudio = async (id) => {
+  const response = await fetch(`${apiClient.baseURL}/convert/${id}/stream`, {
+    headers: apiClient.getAuthHeaders(),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Stream failed');
   }
+  
+  return response.blob();
 };
 
-// Play audio directly in the browser
-export const playAudio = async (id) => {
-  try {
-    const audioUrl = await getAudioBlob(id);
-    const audio = new Audio(audioUrl);
-    // Optional: Add event listeners for audio events
-    audio.addEventListener('loadstart', () => console.log('Loading started'));
-    audio.addEventListener('canplay', () => console.log('Can start playing'));
-    audio.addEventListener('ended', () => {
-      URL.revokeObjectURL(audioUrl); // Clean up the blob URL
-    });
-    await audio.play();
-    return audio;
-  } catch (error) {
-    console.error('Failed to play audio:', error);
-    throw error;
-  }
-};
-
-// Get audio stream for HTML audio elements with proper authentication
-export const createAuthenticatedAudioSrc = async (id) => {
-  try {
-    const audioUrl = await getAudioBlob(id);
-    return audioUrl;
-  } catch (error) {
-    console.error('Failed to create audio source:', error);
-    return null;
-  }
-};
-
-// Check if audio file exists and is accessible
-export const checkAudioAvailability = async (id) => {
-  const token = localStorage.getItem('token');
-  const baseUrl = api.defaults.baseURL;
-  const audioUrl = `${baseUrl}/convert/${id}/download`;
-  try {
-    const response = await fetch(audioUrl, {
-      method: 'HEAD', // Only check headers, don't download content
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.ok;
-  } catch (error) {
-    console.error('Failed to check audio availability:', error);
-    return false;
-  }
-};
-
-// Extract text from PDF (returns text only for textarea display)
-export const extractTextFromPdf = async (file, language = 'en') => {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('language', language);
-  const response = await api.post('/convert/pdf', formData);
-  return response.data['text_content'];
-};
-
-// Extract text from Image (returns text only for textarea display)  
-export const extractTextFromImage = async (file, language = 'en') => {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('language', language);
-  const response = await api.post('/convert/image', formData);
-  return response.data['text_content'];
-};
-
-// Convert text to audio (final conversion step)
-export const convertTextToAudio = async (text, language = 'en') => {
-  const response = await api.post('/convert/text', { text, language });
-  return response.data;
-};
-
-// Legacy functions for backward compatibility
-export const convertPdfToAudio = async (file, language = 'en') => {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('language', language);
-  const response = await api.post('/convert/pdf', formData);
-  return response.data['text_content'];
-};
-
-export const convertImageToAudio = async (file, language = 'en') => {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('language', language);
-  const response = await api.post('/convert/image', formData);
-  return response.data['text_content'];
+export const deleteConversion = (id) => {
+  return apiClient.delete(`/convert/${id}`);
 };

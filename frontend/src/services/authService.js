@@ -1,12 +1,27 @@
-import api from './api.js';
-export const login = async ({ username, password }) => {
+import { apiClient } from './api';
+
+export const login = async (credentials) => {
   const formData = new FormData();
-  formData.append('username', username);
-  formData.append('password', password);
-  const response = await api.post('/auth/token', formData);
-  return response.data;
+  formData.append('username', credentials.username);
+  formData.append('password', credentials.password);
+  
+  const response = await fetch(`${apiClient.baseURL}/auth/token`, {
+    method: 'POST',
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Login failed');
+  }
+  
+  return response.json();
 };
-export const register = async (userData) => {
-  const response = await api.post('/auth/register', userData);
-  return response.data;
+
+export const register = (userData) => {
+  return apiClient.post('/auth/register', userData);
+};
+
+export const getCurrentUser = () => {
+  return apiClient.get('/users/me');
 };

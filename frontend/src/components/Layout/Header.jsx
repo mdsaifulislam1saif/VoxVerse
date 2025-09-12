@@ -1,9 +1,9 @@
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+
 import { FaVolumeUp, FaUser, FaSignOutAlt, FaSignInAlt, FaUserPlus, FaBars } from 'react-icons/fa';
 
 const Header = () => {
-  const { isAuthenticated, logout, user } = useAuth();
+
 
   const navLinkClass = ({ isActive }) =>
     `relative px-4 py-2 rounded-lg font-medium transition-all duration-200 ${

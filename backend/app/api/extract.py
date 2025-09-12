@@ -19,7 +19,6 @@ tts_processor = TTSProcessor()
 
 router = APIRouter()
 
-
 @router.post("/pdf", response_model=ExtractTextResponse)
 async def extract_text_from_pdf(
     file: UploadFile = File(...),
@@ -91,75 +90,3 @@ async def extract_text_from_image(
         if temp_path.exists():
             os.unlink(temp_path)
 
-# @app.post("/convert/text-to-audio", response_model=AudioResponse)
-# async def convert_text_to_audio(request: TextToAudioRequest):
-#     """Convert text to audio file."""
-#     if not request.text.strip():
-#         raise HTTPException(status_code=422, detail="Text content cannot be empty")
-    
-#     try:
-#         # Convert text to audio
-#         audio_file_path = await tts_processor.text_to_audio(request.text, request.language)
-        
-#         return AudioResponse(
-#             audio_file_path=str(audio_file_path),
-#             text=request.text,
-#             language=request.language
-#         )
-    
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Failed to generate audio: {str(e)}")
-
-
-# @app.get("/download-audio/{filename}")
-# async def download_audio(filename: str):
-#     """Download audio file."""
-#     # Assuming audio files are stored in settings.AUDIO_DIR
-#     # You may need to adjust this path based on your settings
-#     audio_dir = Path("audio")  # Replace with actual audio directory from settings
-#     file_path = audio_dir / filename
-    
-#     if not file_path.exists():
-#         raise HTTPException(status_code=404, detail="Audio file not found")
-    
-#     return FileResponse(
-#         path=str(file_path),
-#         media_type="audio/wav",
-#         filename=filename
-#     )
-
-# @app.get("/supported-languages")
-# async def get_supported_languages():
-#     """Get list of supported languages."""
-#     return {
-#         "languages": {
-#             "en": "English",
-#             "bn": "Bengali",
-#             "es": "Spanish",
-#             "fr": "French",
-#             "de": "German",
-#             "it": "Italian",
-#             "pt": "Portuguese",
-#             "ru": "Russian",
-#             "ja": "Japanese",
-#             "ko": "Korean",
-#             "zh-cn": "Chinese (Simplified)",
-#             "ar": "Arabic",
-#             "hi": "Hindi"
-#         }
-#     }
-
-# @app.get("/summary-types")
-# async def get_summary_types():
-#     """Get list of available summary types."""
-#     return {
-#         "types": {
-#             "brief": "Brief (2-3 sentences)",
-#             "detailed": "Detailed summary",
-#             "bullet_points": "Bullet points format"
-#         }
-#     }
-
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=8000)

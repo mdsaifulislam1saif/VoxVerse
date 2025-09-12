@@ -5,7 +5,6 @@ from app.config.config import settings
 
 class GeminiProcessor:
     """Service class to handle Google Gemini AI operations."""
-    
     def __init__(self):
         """Initialize Gemini processor with API key."""
         genai.configure(api_key=settings.GEMINI_API_KEY)
@@ -17,17 +16,6 @@ class GeminiProcessor:
         language: str = "en", 
         summary_type: str = "brief"
     ) -> str:
-        """
-        Summarize text using Google Gemini.
-        
-        Args:
-            text: The text content to summarize
-            language: Language code for the summary
-            summary_type: Type of summary (brief, detailed, bullet_points)
-        
-        Returns:
-            Summarized text
-        """
         try:
             # Create prompt based on summary type
             prompt = self._create_prompt(text, language, summary_type)
@@ -92,12 +80,6 @@ class GeminiProcessor:
         return prompt
     
     async def check_api_health(self) -> bool:
-        """
-        Check if Gemini API is accessible and working properly.
-        
-        Returns:
-            bool: True if API is healthy, False otherwise
-        """
         try:
             logger.info("Checking Gemini API health...")
             loop = asyncio.get_event_loop()
@@ -123,21 +105,8 @@ class GeminiProcessor:
                 max_output_tokens=20
             )
         )
-    
     def get_supported_languages(self) -> list:
-        """
-        Get list of supported languages for summarization.
-        
-        Returns:
-            list: List of supported language codes
-        """
         return settings.SUPPORTED_LANGUAGES
     
     def get_summary_types(self) -> list:
-        """
-        Get list of available summary types.
-        
-        Returns:
-            list: List of summary type options
-        """
         return settings.SUMMARY_TYPES
