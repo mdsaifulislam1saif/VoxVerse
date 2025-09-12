@@ -10,6 +10,7 @@ from app.config.config import settings
 from app.schemas.conversion import TextToSpeechRequest
 from app.services.ocr_service import OCRProcessor
 from app.services.tts_service import TTSProcessor
+import datetime
 
 class ConversionService:
     """Service class to handle conversion-related operations."""
@@ -21,11 +22,14 @@ class ConversionService:
 
     async def convert_text(self, request: TextToSpeechRequest) -> Conversion:
         """Convert text to audio."""
-        audio_file_path = await self.tts.text_to_audio(request.text, request.language)       
+        audio_file_path = await self.tts.text_to_audio(request.text, request.language) 
+        # Short, fixed filename with language and timestamp
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        file_name_to_store = f"Audio_{request.language}_{timestamp}"      
         conv = conversion_crud.create_with_owner(
             db=self.db,
             obj_in={
-                "file_name": f"text_input_{audio_file_path.stem}",
+                "file_name": file_name_to_store,
                 "language": request.language,
                 "source_type": "text",
                 "text_content": request.text,

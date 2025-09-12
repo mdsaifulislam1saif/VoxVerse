@@ -1,884 +1,773 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Upload, 
-  FileText, 
-  Image, 
-  Play, 
-  Pause, 
-  Download, 
-  Loader2, 
-  Volume2,
-  User,
-  LogOut,
-  Eye,
-  EyeOff
+  Upload, Play, Pause, Download, FileText, Image, Mic, 
+  User, LogOut, Eye, EyeOff, Loader2, Trash2, RefreshCw 
 } from 'lucide-react';
 
-// API Base URL - adjust this to your backend URL
 const API_BASE = 'http://localhost:8000';
 
-// Custom hooks
-const useAuth = () => {
-  const [auth, setAuth] = useState({
-    isAuthenticated: false,
-    user: null,
-    token: localStorage.getItem('token')
+const TextToAudioConverter = () => {
+  // Auth state
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [showLogin, setShowLogin] = useState(true);
+  const [authMode, setAuthMode] = useState('login');
+  const [authData, setAuthData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    full_name: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // App state
+  const [text, setText] = useState('');
+  const [summary, setSummary] = useState('');
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('convert');
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [selectedSummaryType, setSelectedSummaryType] = useState('brief');
+  
+  // Conversion history
+  const [conversions, setConversions] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  
+  const audioRef = useRef(null);
+
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'bn', name: 'Bengali', flag: '🇧🇩' },
+    { code: 'bg', name: 'Bulgarian', flag: '🇧🇬' },
+    { code: 'cs', name: 'Czech', flag: '🇨🇿' },
+  ];
+
+  const summaryTypes = [
+    { value: 'brief', label: 'Brief Summary', description: 'Short and concise overview' },
+    { value: 'detailed', label: 'Detailed Summary', description: 'Comprehensive analysis' },
+    { value: 'bullet_points', label: 'Bullet Points', description: 'Key points in list format' }
+  ];
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Verify token and get user info
-      fetchUserProfile(token);
+    const savedToken = sessionStorage.getItem('token');
+    if (savedToken) {
+      setToken(savedToken);
+      fetchCurrentUser(savedToken);
     }
   }, []);
 
-  const fetchUserProfile = async (token) => {
+  const fetchCurrentUser = async (authToken = token) => {
     try {
       const response = await fetch(`${API_BASE}/users/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Authorization': `Bearer ${authToken}` }
       });
       
       if (response.ok) {
-        const user = await response.json();
-        setAuth({
-          isAuthenticated: true,
-          user,
-          token
-        });
+        const userData = await response.json();
+        setUser(userData);
+        setShowLogin(false);
+        fetchConversions(authToken);
       } else {
-        localStorage.removeItem('token');
-        setAuth({
-          isAuthenticated: false,
-          user: null,
-          token: null
-        });
+        logout();
       }
     } catch (error) {
-      console.error('Failed to fetch user profile:', error);
-      localStorage.removeItem('token');
-      setAuth({
-        isAuthenticated: false,
-        user: null,
-        token: null
-      });
+      console.error('Failed to fetch user:', error);
+      logout();
     }
   };
 
-  const login = async (username, password) => {
+  const fetchConversions = async (authToken = token) => {
+    if (!authToken) return;
+    
+    setHistoryLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('password', password);
+      const response = await fetch(`${API_BASE}/convert`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setConversions(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch conversions:', error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
-      const response = await fetch(`${API_BASE}/auth/token`, {
+  const handleAuth = async () => {
+    setLoading(true);
+    
+    try {
+      if (authMode === 'register') {
+        const registerResponse = await fetch(`${API_BASE}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(authData)
+        });
+        
+        if (!registerResponse.ok) {
+          const error = await registerResponse.json();
+          throw new Error(error.detail || 'Registration failed');
+        }
+      }
+      
+      const formData = new FormData();
+      formData.append('username', authData.username);
+      formData.append('password', authData.password);
+      
+      const loginResponse = await fetch(`${API_BASE}/auth/token`, {
         method: 'POST',
         body: formData
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.access_token);
-        await fetchUserProfile(data.access_token);
-        return { success: true };
+      
+      if (loginResponse.ok) {
+        const tokenData = await loginResponse.json();
+        setToken(tokenData.access_token);
+        sessionStorage.setItem('token', tokenData.access_token);
+        setShowLogin(false);
+        setAuthData({ username: '', email: '', password: '', full_name: '' });
+        fetchCurrentUser(tokenData.access_token);
       } else {
-        const error = await response.json();
-        return { success: false, error: error.detail };
+        const error = await loginResponse.json();
+        throw new Error(error.detail || 'Login failed');
       }
     } catch (error) {
-      return { success: false, error: 'Network error' };
-    }
-  };
-
-  const register = async (email, username, password) => {
-    try {
-      const response = await fetch(`${API_BASE}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, username, password })
-      });
-
-      if (response.ok) {
-        return { success: true };
-      } else {
-        const error = await response.json();
-        return { success: false, error: error.detail };
-      }
-    } catch (error) {
-      return { success: false, error: 'Network error' };
+      alert(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    setAuth({
-      isAuthenticated: false,
-      user: null,
-      token: null
-    });
+    sessionStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    setShowLogin(true);
+    setAudioUrl(null);
+    setText('');
+    setSummary('');
+    setConversions([]);
   };
 
-  return { auth, login, register, logout };
-};
-
-// Components
-const LoginForm = ({ onLogin, onToggle }) => {
-  const [formData, setFormData] = useState({ username: '', password: '' });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    const result = await onLogin(formData.username, formData.password);
-    
-    if (!result.success) {
-      setError(result.error);
+  const handleFileUpload = async (file, type) => {
+    if (!token) {
+      setShowLogin(true);
+      return;
     }
-    
-    setLoading(false);
-  };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Volume2 className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
-        </div>
+    setUploadLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('language', selectedLanguage);
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Username
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-              placeholder="Enter your email"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Signing in...
-              </>
-            ) : (
-              'Sign In'
-            )}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            Don't have an account?{' '}
-            <button
-              onClick={onToggle}
-              className="text-indigo-600 hover:text-indigo-700 font-semibold"
-            >
-              Sign up
-            </button>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const RegisterForm = ({ onRegister, onToggle }) => {
-  const [formData, setFormData] = useState({ email: '', username: '', password: '' });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess(false);
-
-    const result = await onRegister(formData.email, formData.username, formData.password);
-    
-    if (result.success) {
-      setSuccess(true);
-      setTimeout(() => onToggle(), 2000);
-    } else {
-      setError(result.error);
-    }
-    
-    setLoading(false);
-  };
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
-          <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Volume2 className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Registration Successful!</h2>
-          <p className="text-gray-600">Your account has been created. Redirecting to login...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Volume2 className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-          <p className="text-gray-600 mt-2">Join us to get started</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-              placeholder="Enter your email"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Username
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-              placeholder="Choose a username"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                placeholder="Create a password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Creating Account...
-              </>
-            ) : (
-              'Create Account'
-            )}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            Already have an account?{' '}
-            <button
-              onClick={onToggle}
-              className="text-purple-600 hover:text-purple-700 font-semibold"
-            >
-              Sign in
-            </button>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const FileUpload = ({ onExtractText, loading }) => {
-  const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef(null);
-
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    const files = e.dataTransfer.files;
-    if (files && files[0]) {
-      handleFile(files[0]);
-    }
-  };
-
-  const handleFile = (file) => {
-    const fileName = file.name.toLowerCase();
-    if (fileName.endsWith('.pdf')) {
-      onExtractText(file, 'pdf');
-    } else if (fileName.match(/\.(jpg|jpeg|png|bmp|tiff|webp)$/)) {
-      onExtractText(file, 'image');
-    } else {
-      alert('Please upload a PDF or image file (jpg, jpeg, png, bmp, tiff, webp)');
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div
-        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-          dragActive 
-            ? 'border-indigo-500 bg-indigo-50' 
-            : 'border-gray-300 hover:border-gray-400'
-        } ${loading ? 'pointer-events-none opacity-50' : ''}`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff,.webp"
-          onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-          className="hidden"
-        />
-        
-        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Drop files here or click to upload
-        </h3>
-        <p className="text-gray-600 mb-4">
-          Support for PDF and image files (JPG, PNG, BMP, TIFF, WebP)
-        </p>
-        
-        <div className="flex gap-3 justify-center">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={loading}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <FileText className="w-4 h-4 mr-2" />
-            )}
-            {loading ? 'Processing...' : 'Upload PDF'}
-          </button>
-          
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={loading}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Image className="w-4 h-4 mr-2" />
-            )}
-            {loading ? 'Processing...' : 'Upload Image'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const TextProcessor = ({ 
-  text, 
-  onTextChange, 
-  onGenerateAudio, 
-  onGenerateSummary, 
-  loading, 
-  summary 
-}) => {
-  return (
-    <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Extracted/Input Text
-        </label>
-        <textarea
-          value={text}
-          onChange={(e) => onTextChange(e.target.value)}
-          placeholder="Upload a file above or type/paste your text here..."
-          className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none transition-all"
-        />
-      </div>
-
-      {text.trim() && (
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => onGenerateAudio(text)}
-            disabled={loading.audio}
-            className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {loading.audio ? (
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
-            ) : (
-              <Volume2 className="w-5 h-5 mr-2" />
-            )}
-            {loading.audio ? 'Generating Audio...' : 'Convert to Audio'}
-          </button>
-
-          <button
-            onClick={() => onGenerateSummary(text)}
-            disabled={loading.summary}
-            className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {loading.summary ? (
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
-            ) : (
-              <FileText className="w-5 h-5 mr-2" />
-            )}
-            {loading.summary ? 'Generating Summary...' : 'Generate Summary'}
-          </button>
-        </div>
-      )}
-
-      {summary && (
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <h3 className="font-semibold text-purple-900 mb-2">Generated Summary</h3>
-          <p className="text-purple-800 mb-4 whitespace-pre-wrap">{summary}</p>
-          <button
-            onClick={() => onGenerateAudio(summary)}
-            disabled={loading.audio}
-            className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {loading.audio ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Volume2 className="w-4 h-4 mr-2" />
-            )}
-            {loading.audio ? 'Generating Audio...' : 'Convert Summary to Audio'}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const AudioPlayer = ({ conversion, token }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const audioRef = useRef(null);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => setDuration(audio.duration);
-    const handleEnded = () => setIsPlaying(false);
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
-
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
-    };
-  }, [conversion]);
-
-  const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleSeek = (e) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const seekTime = (parseFloat(e.target.value) / 100) * duration;
-    audio.currentTime = seekTime;
-    setCurrentTime(seekTime);
-  };
-
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const handleDownload = () => {
-    if (!conversion) return;
-    
-    const link = document.createElement('a');
-    link.href = `${API_BASE}/conversions/${conversion.id}/download?token=${token}`;
-    link.download = `${conversion.file_name}_${conversion.id}.wav`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  if (!conversion) return null;
-
-  return (
-    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-6">
-      <h3 className="font-semibold text-indigo-900 mb-4 flex items-center">
-        <Volume2 className="w-5 h-5 mr-2" />
-        Audio Generated Successfully
-      </h3>
-      
-      <audio
-        ref={audioRef}
-        src={`${API_BASE}/conversions/${conversion.id}/stream`}
-        className="hidden"
-      />
-
-      <div className="flex items-center gap-4 mb-4">
-        <button
-          onClick={togglePlay}
-          className="flex items-center justify-center w-12 h-12 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-all"
-        >
-          {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
-        </button>
-
-        <div className="flex-1">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={duration ? (currentTime / duration) * 100 : 0}
-            onChange={handleSeek}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-          />
-          <div className="flex justify-between text-sm text-gray-600 mt-1">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
-        </div>
-
-        <button
-          onClick={handleDownload}
-          className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Download
-        </button>
-      </div>
-
-      <div className="text-sm text-gray-600">
-        <p><strong>Source:</strong> {conversion.source_type === 'text' ? 'Manual Input' : conversion.file_name}</p>
-        <p><strong>Language:</strong> {conversion.language}</p>
-        <p><strong>Created:</strong> {new Date(conversion.created_at).toLocaleString()}</p>
-      </div>
-    </div>
-  );
-};
-
-const Header = ({ user, onLogout }) => {
-  return (
-    <div className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
-          <div className="flex items-center">
-            <Volume2 className="w-8 h-8 text-indigo-600 mr-3" />
-            <h1 className="text-2xl font-bold text-gray-900">Text to Speech</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center text-gray-600">
-              <User className="w-5 h-5 mr-2" />
-              <span className="font-medium">{user.username}</span>
-            </div>
-            <button
-              onClick={onLogout}
-              className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Main App Component
-const App = () => {
-  const { auth, login, register, logout } = useAuth();
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [text, setText] = useState('');
-  const [summary, setSummary] = useState('');
-  const [currentConversion, setCurrentConversion] = useState(null);
-  const [loading, setLoading] = useState({
-    extract: false,
-    audio: false,
-    summary: false
-  });
-
-  const extractText = async (file, type) => {
-    setLoading(prev => ({ ...prev, extract: true }));
-    
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('language', 'en');
-
       const endpoint = type === 'pdf' ? '/extract/pdf' : '/extract/image';
       const response = await fetch(`${API_BASE}${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${auth.token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
 
       if (response.ok) {
         const data = await response.json();
         setText(data.text);
-        // Clear previous summary and conversion when new text is extracted
-        setSummary('');
-        setCurrentConversion(null);
       } else {
         const error = await response.json();
-        alert(`Failed to extract text: ${error.detail}`);
+        alert(error.detail || 'Failed to extract text');
       }
     } catch (error) {
-      alert('Network error while extracting text');
+      alert('Failed to upload file');
     } finally {
-      setLoading(prev => ({ ...prev, extract: false }));
+      setUploadLoading(false);
     }
   };
 
-  const generateSummary = async (inputText) => {
-    setLoading(prev => ({ ...prev, summary: true }));
-    
+  const convertToAudio = async () => {
+    if (!token) {
+      setShowLogin(true);
+      return;
+    }
+
+    if (!text.trim()) {
+      alert('Please enter some text to convert');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/summarization/summary`, {
+      const response = await fetch(`${API_BASE}/convert/text`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${auth.token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          text: inputText,
-          language: 'en',
-          summary_type: 'detailed'
+          text: text,
+          language: selectedLanguage,
+          speed: 1.0,
+          format: 'mp3'
         })
       });
 
       if (response.ok) {
         const data = await response.json();
-        setSummary(data.summary_content);
+        const audioResponse = await fetch(`${API_BASE}/convert/${data.id}/stream`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (audioResponse.ok) {
+          const audioBlob = await audioResponse.blob();
+          const audioUrl = URL.createObjectURL(audioBlob);
+          setAudioUrl(audioUrl);
+          fetchConversions();
+        }
       } else {
         const error = await response.json();
-        alert(`Failed to generate summary: ${error.detail}`);
+        alert(error.detail || 'Failed to convert to audio');
       }
     } catch (error) {
-      alert('Network error while generating summary');
+      alert('Failed to convert text to audio');
     } finally {
-      setLoading(prev => ({ ...prev, summary: false }));
+      setLoading(false);
     }
   };
 
-  const generateAudio = async (inputText) => {
-    setLoading(prev => ({ ...prev, audio: true }));
-    
+  const convertToSummaryThenAudio = async () => {
+    if (!token) {
+      setShowLogin(true);
+      return;
+    }
+
+    if (!text.trim()) {
+      alert('Please enter some text to summarize');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/conversions/text`, {
+      const summaryResponse = await fetch(`${API_BASE}/summarize/summary`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${auth.token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          text: inputText,
-          language: 'en'
+          text: text,
+          language: selectedLanguage,
+          summary_type: selectedSummaryType
         })
       });
 
-      if (response.ok) {
-        const conversion = await response.json();
-        setCurrentConversion(conversion);
+      if (summaryResponse.ok) {
+        const summaryData = await summaryResponse.json();
+        setSummary(summaryData.summary_content);
+
+        const audioResponse = await fetch(`${API_BASE}/convert/text`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            text: summaryData.summary_content,
+            language: selectedLanguage,
+            speed: 1.0,
+            format: 'mp3'
+          })
+        });
+
+        if (audioResponse.ok) {
+          const audioData = await audioResponse.json();
+          const streamResponse = await fetch(`${API_BASE}/convert/${audioData.id}/stream`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (streamResponse.ok) {
+            const audioBlob = await streamResponse.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            setAudioUrl(audioUrl);
+            fetchConversions();
+          }
+        }
       } else {
-        const error = await response.json();
-        alert(`Failed to generate audio: ${error.detail}`);
+        const error = await summaryResponse.json();
+        alert(error.detail || 'Failed to generate summary');
       }
     } catch (error) {
-      alert('Network error while generating audio');
+      alert('Failed to process text');
     } finally {
-      setLoading(prev => ({ ...prev, audio: false }));
+      setLoading(false);
     }
   };
 
-  const handleTextChange = (newText) => {
-    setText(newText);
-    // Clear summary and conversion when text changes
-    setSummary('');
-    setCurrentConversion(null);
+  const deleteConversion = async (conversionId) => {
+    if (!confirm('Are you sure you want to delete this conversion?')) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/convert/${conversionId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        setConversions(prev => prev.filter(conv => conv.id !== conversionId));
+      } else {
+        alert('Failed to delete conversion');
+      }
+    } catch (error) {
+      alert('Failed to delete conversion');
+    }
   };
 
-  if (!auth.isAuthenticated) {
-    return isLoginMode ? (
-      <LoginForm 
-        onLogin={login} 
-        onToggle={() => setIsLoginMode(false)} 
-      />
-    ) : (
-      <RegisterForm 
-        onRegister={register} 
-        onToggle={() => setIsLoginMode(true)} 
-      />
+  const downloadConversion = async (conversionId, fileName) => {
+    try {
+      const response = await fetch(`${API_BASE}/convert/${conversionId}/download`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fileName || 'audio'}.mp3`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        alert('Failed to download audio');
+      }
+    } catch (error) {
+      alert('Failed to download audio');
+    }
+  };
+
+  const togglePlayback = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const downloadAudio = () => {
+    if (audioUrl) {
+      const a = document.createElement('a');
+      a.href = audioUrl;
+      a.download = 'converted_audio.mp3';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
+  if (showLogin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <Mic className="w-8 h-8 text-blue-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
+            </h1>
+            <p className="text-gray-600">
+              {authMode === 'login' ? 'Sign in to convert text to audio' : 'Join us to get started'}
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+              <input
+                type="text"
+                value={authData.username}
+                onChange={(e) => setAuthData({...authData, username: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter your username"
+              />
+            </div>
+
+            {authMode === 'register' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={authData.email}
+                    onChange={(e) => setAuthData({...authData, email: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                  <input
+                    type="text"
+                    value={authData.full_name}
+                    onChange={(e) => setAuthData({...authData, full_name: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+              </>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={authData.password}
+                  onChange={(e) => setAuthData({...authData, password: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={handleAuth}
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+            >
+              {loading && <Loader2 className="animate-spin mr-2" size={20} />}
+              {authMode === 'login' ? 'Sign In' : 'Create Account'}
+            </button>
+          </div>
+
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => {
+                setAuthMode(authMode === 'login' ? 'register' : 'login');
+                setAuthData({ username: '', email: '', password: '', full_name: '' });
+              }}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              {authMode === 'login' 
+                ? "Don't have an account? Sign up" 
+                : "Already have an account? Sign in"}
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header user={auth.user} onLogout={logout} />
-      
-      <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="space-y-8">
-          {/* File Upload Section */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Document</h2>
-            <FileUpload 
-              onExtractText={extractText} 
-              loading={loading.extract} 
-            />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <header className="bg-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-4">
+                <Mic className="h-6 w-6 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Text to Audio Converter
+              </h1>
+            </div>
+            
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="flex items-center text-gray-600 hover:text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50"
+              >
+                <FileText className="h-5 w-5 mr-2" />
+                History ({conversions.length})
+              </button>
+              
+              {user && (
+                <div className="flex items-center text-gray-700 bg-gray-100 px-4 py-2 rounded-lg">
+                  <User className="h-5 w-5 mr-2" />
+                  <span className="font-medium">{user.full_name || user.username}</span>
+                </div>
+              )}
+              
+              <button
+                onClick={logout}
+                className="flex items-center text-gray-600 hover:text-red-600 px-4 py-2 rounded-lg hover:bg-red-50"
+              >
+                <LogOut className="h-5 w-5 mr-2" />
+                Logout
+              </button>
+            </div>
           </div>
+        </div>
+      </header>
 
-          {/* Text Processing Section */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Text Processing</h2>
-            <TextProcessor 
-              text={text}
-              onTextChange={handleTextChange}
-              onGenerateAudio={generateAudio}
-              onGenerateSummary={generateSummary}
-              loading={loading}
-              summary={summary}
-            />
-          </div>
-
-          {/* Audio Player Section */}
-          {currentConversion && (
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Audio Player</h2>
-              <AudioPlayer 
-                conversion={currentConversion} 
-                token={auth.token} 
-              />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* History Sidebar */}
+          {showHistory && (
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-800">History</h2>
+                  <button
+                    onClick={() => fetchConversions()}
+                    disabled={historyLoading}
+                    className="p-2 text-gray-500 hover:text-blue-600"
+                  >
+                    <RefreshCw className={`h-5 w-5 ${historyLoading ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+                
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {conversions.map((conversion) => (
+                    <div key={conversion.id} className="border border-gray-200 rounded-lg p-3">
+                      <h3 className="font-medium text-sm text-gray-800 truncate">
+                        {conversion.file_name || 'Untitled'}
+                      </h3>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(conversion.created_at).toLocaleDateString()}
+                      </p>
+                      <div className="flex justify-between mt-2">
+                        <button
+                          onClick={() => downloadConversion(conversion.id, conversion.file_name)}
+                          className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
+                        >
+                          <Download className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={() => deleteConversion(conversion.id)}
+                          className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {conversions.length === 0 && !historyLoading && (
+                    <p className="text-gray-500 text-sm text-center py-8">No conversions yet</p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Instructions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-3">How to Use</h3>
-            <div className="grid md:grid-cols-2 gap-4 text-sm text-blue-800">
-              <div>
-                <h4 className="font-semibold mb-2">📄 Document Processing</h4>
-                <ul className="space-y-1">
-                  <li>• Upload PDF or image files</li>
-                  <li>• Text will be automatically extracted</li>
-                  <li>• Edit extracted text if needed</li>
-                </ul>
+          {/* Main Content */}
+          <div className={showHistory ? "lg:col-span-3" : "lg:col-span-4"}>
+            {/* Tabs */}
+            <div className="bg-white rounded-xl shadow-lg mb-8 overflow-hidden">
+              <div className="border-b border-gray-200">
+                <nav className="flex">
+                  <button
+                    onClick={() => setActiveTab('convert')}
+                    className={`flex-1 py-4 px-6 text-center font-medium ${
+                      activeTab === 'convert'
+                        ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center">
+                      <Mic className="mr-2" size={20} />
+                      Text to Audio
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('summarize')}
+                    className={`flex-1 py-4 px-6 text-center font-medium ${
+                      activeTab === 'summarize'
+                        ? 'bg-green-50 text-green-700 border-b-2 border-green-500'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center">
+                      <FileText className="mr-2" size={20} />
+                      Summarize & Audio
+                    </div>
+                  </button>
+                </nav>
               </div>
-              <div>
-                <h4 className="font-semibold mb-2">🔊 Audio Generation</h4>
-                <ul className="space-y-1">
-                  <li>• Convert text directly to audio</li>
-                  <li>• Generate summary then convert to audio</li>
-                  <li>• Play, pause, and download audio files</li>
-                </ul>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* File Upload */}
+              <div className="lg:col-span-1">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <Upload className="mr-3 text-blue-600" size={24} />
+                    Upload Files
+                  </h2>
+                  <div className="space-y-4">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 hover:border-blue-400">
+                      {uploadLoading ? (
+                        <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
+                      ) : (
+                        <>
+                          <FileText className="h-8 w-8 text-blue-500 mb-2" />
+                          <span className="text-sm font-medium text-gray-700">Upload PDF</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf"
+                        onChange={(e) => e.target.files[0] && handleFileUpload(e.target.files[0], 'pdf')}
+                      />
+                    </label>
+                    
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-green-50 hover:border-green-400">
+                      {uploadLoading ? (
+                        <Loader2 className="animate-spin h-8 w-8 text-green-500" />
+                      ) : (
+                        <>
+                          <Image className="h-8 w-8 text-green-500 mb-2" />
+                          <span className="text-sm font-medium text-gray-700">Upload Image</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".jpg,.jpeg,.png,.bmp,.tiff,.webp"
+                        onChange={(e) => e.target.files[0] && handleFileUpload(e.target.files[0], 'image')}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Text Processing */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="mb-6">
+                    <h2 className="text-xl font-bold text-gray-800 mb-4">
+                      {activeTab === 'convert' ? 'Text to Convert' : 'Text to Summarize'}
+                    </h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                        <select
+                          value={selectedLanguage}
+                          onChange={(e) => setSelectedLanguage(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {languages.map((lang) => (
+                            <option key={lang.code} value={lang.code}>
+                              {lang.flag} {lang.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {activeTab === 'summarize' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Summary Type</label>
+                          <select
+                            value={selectedSummaryType}
+                            onChange={(e) => setSelectedSummaryType(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                          >
+                            {summaryTypes.map((type) => (
+                              <option key={type.value} value={type.value}>
+                                {type.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    <textarea
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      placeholder="Type or paste your text here, or upload a file to extract text automatically..."
+                      className="w-full h-48 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    />
+                  </div>
+
+                  {activeTab === 'summarize' && summary && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-3">Generated Summary</h3>
+                      <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+                        <p className="text-gray-700 leading-relaxed">{summary}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-4 mb-6">
+                    {activeTab === 'convert' ? (
+                      <button
+                        onClick={convertToAudio}
+                        disabled={loading || !text.trim()}
+                        className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {loading ? (
+                          <Loader2 className="animate-spin mr-2" size={20} />
+                        ) : (
+                          <Mic className="mr-2" size={20} />
+                        )}
+                        Convert to Audio
+                      </button>
+                    ) : (
+                      <button
+                        onClick={convertToSummaryThenAudio}
+                        disabled={loading || !text.trim()}
+                        className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                      >
+                        {loading ? (
+                          <Loader2 className="animate-spin mr-2" size={20} />
+                        ) : (
+                          <FileText className="mr-2" size={20} />
+                        )}
+                        Summarize & Convert
+                      </button>
+                    )}
+                  </div>
+
+                  {audioUrl && (
+                    <div className="bg-gray-50 border border-gray-200 p-6 rounded-xl">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3">
+                          <Play className="text-white" size={16} />
+                        </div>
+                        Audio Player
+                      </h3>
+                      <div className="flex items-center space-x-4 mb-4">
+                        <button
+                          onClick={togglePlayback}
+                          className="flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow-lg"
+                        >
+                          {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                        </button>
+                        <button
+                          onClick={downloadAudio}
+                          className="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                        >
+                          <Download className="mr-2" size={16} />
+                          Download
+                        </button>
+                      </div>
+                      <audio
+                        ref={audioRef}
+                        src={audioUrl}
+                        onEnded={() => setIsPlaying(false)}
+                        className="w-full"
+                        controls
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -888,4 +777,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default TextToAudioConverter;
