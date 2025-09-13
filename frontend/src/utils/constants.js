@@ -16,8 +16,8 @@ export const SUMMARY_TYPES = [
 export const ROUTES = {
   HOME: '/',
   AUTH: '/auth',
-  LOGIN: '/auth/login',
-  REGISTER: '/auth/register',
+  LOGIN: '/login',
+  REGISTER: '/register',
   CONVERTER: '/converter',
   HISTORY: '/history',
   PROFILE: '/profile'

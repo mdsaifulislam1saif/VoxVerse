@@ -1,17 +1,16 @@
-import { createBrowserRouter } from 'react-router-dom';
-import RootLayout from '@layouts/RootLayout';
-import AuthLayout from '@layouts/AuthLayout';
-import ProtectedRoute from '@components/common/ProtectedRoute';
+import { createBrowserRouter } from "react-router-dom";
+import Root from "../Root/Root";
 import Home from '@pages/Home';
-import Auth from '@pages/Auth';
 import Converter from '@pages/Converter';
 import History from '@pages/History';
 import Profile from '@pages/Profile';
+import LoginForm from "../components/auth/LoginForm";
+import RegisterForm from "../components/auth/RegisterForm";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <RootLayout />,
+    element: <Root />,
     children: [
       {
         path: "/",
@@ -20,39 +19,34 @@ const router = createBrowserRouter([
       {
         path: "/converter",
         element: (
-          <ProtectedRoute>
             <Converter />
-          </ProtectedRoute>
         )
       },
       {
         path: "/history",
         element: (
-          <ProtectedRoute>
             <History />
-          </ProtectedRoute>
         )
       },
       {
         path: "/profile",
         element: (
-          <ProtectedRoute>
             <Profile />
-          </ProtectedRoute>
+        )
+      },
+      {
+        path: "/login",
+        element: (
+            <LoginForm />
+        )
+      },{
+        path: "/register",
+        element: (
+            <RegisterForm />
         )
       }
+
     ]
   },
-  {
-    path: "/auth",
-    element: <AuthLayout />,
-    children: [
-      {
-        path: "/auth/:mode?",
-        element: <Auth />
-      }
-    ]
-  }
 ]);
-
 export default router;
