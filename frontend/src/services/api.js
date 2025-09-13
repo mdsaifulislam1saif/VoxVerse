@@ -1,4 +1,4 @@
-import { API_BASE } from "../utils/constants";
+import { API_BASE } from "../config/config";
 
 
 class ApiService {

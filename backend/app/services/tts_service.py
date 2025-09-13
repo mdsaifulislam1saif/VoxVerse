@@ -59,8 +59,8 @@ class TTSProcessor:
         text: str,
         lang: str,
         speaker: Optional[str] = None,
-        max_retries: int = 3,
-        retry_delay: int = 5
+        max_retries: int = 5,
+        retry_delay: int = 10
     ) -> Path:
         """Convert text into speech and save as audio file."""
         model_name = self.LANG_TO_MODEL.get(

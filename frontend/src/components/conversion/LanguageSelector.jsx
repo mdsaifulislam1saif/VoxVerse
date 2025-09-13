@@ -1,5 +1,4 @@
-import React from 'react';
-import { LANGUAGES } from '@utils/constants';
+import { LANGUAGES } from "../../config/config";
 
 const LanguageSelector = ({ selectedLanguage, setSelectedLanguage }) => {
   return (

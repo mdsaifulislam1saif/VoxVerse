@@ -1,5 +1,4 @@
-import React from 'react';
-import { SUMMARY_TYPES } from '@utils/constants';
+import { SUMMARY_TYPES } from "../../config/config";
 
 const SummarizeSelector = ({ selectedSummaryType, setSelectedSummaryType }) => {
   return (

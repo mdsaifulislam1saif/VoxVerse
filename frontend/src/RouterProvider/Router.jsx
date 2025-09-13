@@ -1,9 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import Root from "../Root/Root";
-import Home from '@pages/Home';
-import Converter from '@pages/Converter';
-import History from '@pages/History';
-import Profile from '@pages/Profile';
+import Home from "../components/pages/Home";
+import Converter from "../components/pages/Converter";
+import History from "../components/pages/History";
+import Profile from "../components/pages/Profile";
 import LoginForm from "../components/auth/LoginForm";
 import RegisterForm from "../components/auth/RegisterForm";
 

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '@context/AuthContext';
 import { 
   Mic, User, LogOut, FileText, Home, Menu, X, LogIn, UserPlus 
 } from 'lucide-react';
-import { ROUTES } from '@utils/constants';
+import { ROUTES } from '../../config/config';
+import { useAuth } from '../../context/AuthContext';
 
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();

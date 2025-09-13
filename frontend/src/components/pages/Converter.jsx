@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Mic, FileText } from 'lucide-react';
-import { ConvertTab } from './ConvertTab';
-import { SummarizeTab } from './SummarizeTab';
+import { ConvertTab } from '../conversion/ConvertTab';
+import { SummarizeTab } from '../summary/SummarizeTab';
 
 const Converter = () => {
   const [activeTab, setActiveTab] = useState('convert');

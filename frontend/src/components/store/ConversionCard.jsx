@@ -1,0 +1,79 @@
+import { Download, Trash2, Calendar, Clock } from 'lucide-react';
+import LoadingSpinner from '../progress/LoadingSpinner';
+
+const ConversionCard = ({ conv, deleteLoading, onDelete, onDownload }) => {
+  const formatDate = (utcString) => {
+    const date = new Date(utcString);
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-800 truncate mb-2">
+            {conv.file_name || 'Untitled Conversion'}
+          </h3>
+          {conv.text_content && (
+            <p className="text-gray-700 mb-2">
+              {conv.text_content.length > 50
+                ? `${conv.text_content.substring(0, 50)}...`
+                : conv.text_content}
+            </p>
+          )}
+          <div className="flex items-center text-sm text-gray-500 mb-1">
+            <Calendar className="h-4 w-4 mr-1" />
+            {formatDate(conv.created_at)}
+          </div>
+          {conv.duration && (
+            <div className="flex items-center text-sm text-gray-500">
+              <Clock className="h-4 w-4 mr-1" />
+              {conv.duration}s
+            </div>
+          )}
+        </div>
+      </div>
+
+      {conv.text_preview && (
+        <div className="bg-gray-50 rounded-lg p-3 mb-4">
+          <p className="text-sm text-gray-700 line-clamp-3">
+            {conv.text_preview.length > 100
+              ? `${conv.text_preview.substring(0, 100)}...`
+              : conv.text_preview}
+          </p>
+        </div>
+      )}
+
+      <div className="flex justify-between items-center">
+        <button
+          onClick={() => onDownload(conv.id, conv.file_name)}
+          className="flex items-center bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+        >
+          <Download className="h-4 w-4 mr-1" />
+          Download
+        </button>
+        <button
+          onClick={() => onDelete(conv.id)}
+          disabled={deleteLoading === conv.id}
+          className="flex items-center bg-red-100 text-red-700 px-3 py-2 rounded-lg hover:bg-red-200 transition-colors text-sm disabled:opacity-50"
+        >
+          {deleteLoading === conv.id ? (
+            <LoadingSpinner size="small" className="mr-1" />
+          ) : (
+            <Trash2 className="h-4 w-4 mr-1" />
+          )}
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default ConversionCard;

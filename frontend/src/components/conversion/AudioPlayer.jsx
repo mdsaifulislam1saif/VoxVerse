@@ -1,52 +1,17 @@
-import React, { useRef, useState, useEffect } from 'react';
 import { Play, Pause, Download, Volume2, Square } from 'lucide-react';
+import { useAudioPlayer } from '../../hook/useAudioPlayer';
 
 const AudioPlayer = ({ audioUrl }) => {
-  const audioRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audioDuration, setAudioDuration] = useState(0);
-  const [audioProgress, setAudioProgress] = useState(0);
-
-  // Update audio progress
-  const handleTimeUpdate = () => {
-    if (!audioRef.current) return;
-    setAudioProgress((audioRef.current.currentTime / audioDuration) * 100);
-  };
-
-  const handleLoadedMetadata = () => {
-    if (!audioRef.current) return;
-    setAudioDuration(audioRef.current.duration);
-  };
-
-  const togglePlayback = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) audioRef.current.pause();
-    else audioRef.current.play();
-    setIsPlaying(!isPlaying);
-  };
-
-  const stopAudio = () => {
-    if (!audioRef.current) return;
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
-    setIsPlaying(false);
-  };
-
-  const downloadAudio = () => {
-    if (!audioUrl) return;
-    const a = document.createElement('a');
-    a.href = audioUrl;
-    a.download = 'converted_audio.mp3';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60) || 0;
-    const seconds = Math.floor(time % 60) || 0;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+  const {
+    audioRef,
+    isPlaying,
+    duration,
+    progress,
+    togglePlayback,
+    stopAudio,
+    downloadAudio,
+    formatTime,
+  } = useAudioPlayer(audioUrl);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden mt-6">
@@ -65,14 +30,7 @@ const AudioPlayer = ({ audioUrl }) => {
 
       {/* Controls & Progress */}
       <div className="p-6 space-y-6">
-        <audio
-          ref={audioRef}
-          src={audioUrl}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={() => setIsPlaying(false)}
-          preload="metadata"
-        />
+        <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
         <div className="bg-gray-50 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
@@ -95,7 +53,7 @@ const AudioPlayer = ({ audioUrl }) => {
               <div className="flex items-center space-x-2 text-gray-600">
                 <Volume2 className="w-4 h-4" />
                 <span className="text-sm font-medium">
-                  {formatTime(audioRef.current?.currentTime || 0)} / {formatTime(audioDuration)}
+                  {formatTime(audioRef.current?.currentTime || 0)} / {formatTime(duration)}
                 </span>
               </div>
             </div>
@@ -114,7 +72,7 @@ const AudioPlayer = ({ audioUrl }) => {
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all"
-              style={{ width: `${audioProgress}%` }}
+              style={{ width: `${progress}%` }}
             ></div>
           </div>
         </div>
