@@ -13,19 +13,22 @@ from app.services.tts_service import TTSProcessor
 import datetime
 
 class ConversionService:
-    """Service class to handle conversion-related operations."""
+    """Service class to handle operations related to text/audio conversions."""
     def __init__(self, db: Session, current_user: User):
+        # Store database session and current logged-in user
         self.db = db
         self.current_user = current_user
+        # Initialize OCR and TTS processors
         self.ocr = OCRProcessor()
         self.tts = TTSProcessor()
 
     async def convert_text(self, request: TextToSpeechRequest) -> Conversion:
-        """Convert text to audio."""
+        # Convert the text to an audio file asynchronously
         audio_file_path = await self.tts.text_to_audio(request.text, request.language) 
-        # Short, fixed filename with language and timestamp
+        # Generate a short, unique filename using language and timestamp
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         file_name_to_store = f"Audio_{request.language}_{timestamp}"      
+        # Save the conversion record in the database
         conv = conversion_crud.create_with_owner(
             db=self.db,
             obj_in={
@@ -40,13 +43,12 @@ class ConversionService:
         return conv
 
     def list_conversions(self, skip=0, limit=100):
-        """List user's conversions."""
+        # List all conversions for the current user with optional pagination.
         return conversion_crud.get_multi_by_owner(
             db=self.db, user_id=self.current_user.id, skip=skip, limit=limit
         )
-
     def get_conversion_by_id(self, conversion_id: int) -> Conversion:
-        """Get a conversion by ID if it belongs to the current user."""
+        # Retrieve a conversion by ID if it belongs to the current user.
         conv = conversion_crud.get(self.db, conversion_id)
         if not conv:
             raise HTTPException(
@@ -60,12 +62,12 @@ class ConversionService:
             )
         return conv
 
-    def delete_conversion(self, conversion_id: int):
-        """Delete a conversion by ID."""
+    def delete_conversion(self, conversion_id: int):     
+        # Ensure conversion exists and belongs to user
         conv = self.get_conversion_by_id(conversion_id)      
-        # Delete audio file if it exists
+        # Delete the audio file from the file system if it exists
         file_path = Path(conv.audio_file_path)
         if file_path.exists():
             os.unlink(file_path)
-        # Delete from database
+        # Remove the conversion record from the database
         conversion_crud.remove(self.db, id=conv.id)

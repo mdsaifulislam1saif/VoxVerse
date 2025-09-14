@@ -45,6 +45,5 @@ class CRUDConversion(CRUDBase[Conversion, ConversionCreate, ConversionUpdate]):
             .limit(limit)
             .all()
         )
-
 # Instantiate a global CRUD object for conversions
 conversion = CRUDConversion(Conversion)

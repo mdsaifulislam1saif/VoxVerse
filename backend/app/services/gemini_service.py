@@ -4,11 +4,12 @@ from typing import Optional
 from app.config.config import settings
 
 class GeminiProcessor:
-    """Service class to handle Google Gemini AI operations."""
+    """Service class to handle text summarization and other operations using Google Gemini AI."""
     def __init__(self):
-        """Initialize Gemini processor with API key."""
+        """Initialize the Gemini processor with the API key and model."""
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel('gemini-1.5-flash') 
+        # Using the Gemini model 'gemini-1.5-flash'
+        self.model = genai.GenerativeModel(settings.GEMINI_MODEL) 
     
     async def summarize_text(
         self, 
@@ -17,87 +18,52 @@ class GeminiProcessor:
         summary_type: str = "brief"
     ) -> str:
         try:
-            # Create prompt based on summary type
+            # Build a prompt according to the language and summary type
             prompt = self._create_prompt(text, language, summary_type)
-            
-            # Run the AI generation in a thread to avoid blocking
+            # Run the API call in a separate thread to avoid blocking the event loop
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None, 
                 lambda: self.model.generate_content(prompt)
             )
-            
             if not response.text:
                 raise Exception("No summary generated")
-                
             return response.text.strip()
-            
         except Exception as e:
             raise Exception(f"Failed to generate summary: {str(e)}")
     
     def _create_prompt(self, text: str, language: str, summary_type: str) -> str:
-        """Create appropriate prompt based on summary type and language."""
-        
-        # Language-specific instructions
-        language_instructions = {
-            "en": "Please provide the summary in English.",
-            "es": "Por favor, proporciona el resumen en español.",
-            "fr": "Veuillez fournir le résumé en français.",
-            "de": "Bitte stellen Sie die Zusammenfassung auf Deutsch bereit.",
-            "it": "Si prega di fornire il riassunto in italiano.",
-            "pt": "Por favor, forneça o resumo em português.",
-            "ru": "Пожалуйста, предоставьте резюме на русском языке.",
-            "ja": "日本語で要約を提供してください。",
-            "ko": "한국어로 요약을 제공해 주세요.",
-            "zh": "请用中文提供摘要。",
-            "ar": "يرجى تقديم الملخص باللغة العربية.",
-            "hi": "कृपया हिंदी में सारांश प्रदान करें।",
-            "bn": "দয়া করে বাংলায় সারসংক্ষেপ প্রদান করুন।"
-        }
-        
-        lang_instruction = language_instructions.get(language, "Please provide the summary in English.")
-        
-        # Summary type specific prompts
+        lang_instruction = settings.LANGUAGE_INSTRUCTIONS.get(language, "Please provide the summary in English.")
+        # Instructions based on summary type
         if summary_type == "brief":
-            type_instruction = "Create a brief, concise summary in 2-3 sentences that captures the main points."
+            type_instruction = settings.BRIEF
         elif summary_type == "detailed":
-            type_instruction = "Create a detailed summary that covers all important points, key details, and main arguments. Include relevant context and supporting information."
+            type_instruction = settings.DETAILED
         elif summary_type == "bullet_points":
-            type_instruction = "Create a summary using bullet points that highlight the key points, main ideas, and important details in an organized format."
+            type_instruction = settings.BULLET_POINTS
         else:
-            type_instruction = "Create a brief, concise summary in 2-3 sentences that captures the main points."
-        
+            type_instruction = settings.BRIEF
+        # Construct the full prompt
         prompt = f"""
                 {type_instruction}
-
                 {lang_instruction}
-
                 Text to summarize:
                 {text}
-
                 Summary:
                 """
         return prompt
-    
+
     async def check_api_health(self) -> bool:
         try:
-            logger.info("Checking Gemini API health...")
             loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                self._test_api_connection
-            )
-            
+            response = await loop.run_in_executor(None, self._test_api_connection)
             is_healthy = bool(response and response.text)
-            logger.info(f"Gemini API health check: {'PASSED' if is_healthy else 'FAILED'}")
             return is_healthy
-            
         except Exception as e:
-            logger.error(f"Gemini API health check failed: {str(e)}")
             return False
-    
+
     def _test_api_connection(self):
-        """Test API connection with a simple request."""
+        """Send a simple request to test the API connection."""
         return self.model.generate_content(
             "Hello, this is a test message. Please respond with 'API is working'.",
             generation_config=genai.types.GenerationConfig(
@@ -106,7 +72,9 @@ class GeminiProcessor:
             )
         )
     def get_supported_languages(self) -> list:
+        """Return a list of languages supported for summarization."""
         return settings.SUPPORTED_LANGUAGES
     
     def get_summary_types(self) -> list:
+        """Return a list of supported summary types (brief, detailed, bullet_points)."""
         return settings.SUMMARY_TYPES

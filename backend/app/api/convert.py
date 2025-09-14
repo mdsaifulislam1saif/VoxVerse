@@ -9,6 +9,7 @@ from app.models.user import User
 from app.schemas.conversion import Conversion as ConversionSchema, TextToSpeechRequest
 from app.services.conversion_service import ConversionService
 
+# Router for handling text-to-speech conversions
 router = APIRouter()
 
 @router.post("/text", response_model=ConversionSchema, status_code=status.HTTP_201_CREATED)
@@ -17,7 +18,12 @@ async def convert_text_route(
     current_user: User = Depends(auth_service.get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """Convert text to audio."""
+    """
+    Convert user-provided text into an audio file.
+    - Requires authentication (current_user).
+    - Saves conversion metadata to the database.
+    - Returns conversion details (including file path).
+    """
     service = ConversionService(db, current_user)
     return await service.convert_text(request)
 
@@ -28,7 +34,11 @@ def list_conversions_route(
     current_user: User = Depends(auth_service.get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """List user's conversions."""
+    """
+    Get a paginated list of the authenticated user's conversions.
+    - skip: number of records to skip (for pagination).
+    - limit: max number of records to return.
+    """
     service = ConversionService(db, current_user)
     return service.list_conversions(skip, limit)
 
@@ -38,7 +48,10 @@ def get_conversion_route(
     current_user: User = Depends(auth_service.get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """Get a specific conversion."""
+    """
+    Retrieve a specific conversion by ID.
+    - Ensures the conversion belongs to the authenticated user.
+    """
     service = ConversionService(db, current_user)
     return service.get_conversion_by_id(conversion_id)
 
@@ -49,7 +62,12 @@ def download_audio(
     current_user: User = Depends(auth_service.get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """Download or stream the audio file for a conversion."""
+    """
+    Download or stream an audio file for a specific conversion.
+    - inline=False → force download.
+    - inline=True  → stream/play directly in browser.
+    - Automatically sets correct media type based on file extension.
+    """
     service = ConversionService(db, current_user)
     conversion = service.get_conversion_by_id(conversion_id)
     
@@ -60,8 +78,8 @@ def download_audio(
             detail="Audio file not found"
         )
     
-    # Determine media type based on file extension
-    media_type = "audio/wav"  # default
+    # Detect file type for proper Content-Type header
+    media_type = "audio/wav"
     if file_path.suffix.lower() == ".mp3":
         media_type = "audio/mpeg"
     elif file_path.suffix.lower() == ".ogg":
@@ -71,14 +89,14 @@ def download_audio(
     elif file_path.suffix.lower() == ".flac":
         media_type = "audio/flac"
     
-    # Generate a clean filename
+    # Create a clean, user-friendly filename
     clean_filename = f"{conversion.file_name}_{conversion.id}{file_path.suffix}"
     
     return FileResponse(
         file_path,
         media_type=media_type,
         filename=clean_filename,
-        # Use inline for streaming in browser, attachment for download
+        # If inline=True → browser tries to play, else → downloads as attachment
         headers={"Content-Disposition": f"{'inline' if inline else 'attachment'}; filename={clean_filename}"}
     )
 
@@ -88,7 +106,12 @@ def stream_audio(
     current_user: User = Depends(auth_service.get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """Stream audio file for web players."""
+    """
+    Stream an audio file for use in web players.
+    - Always sets Content-Disposition=inline.
+    - Supports range requests (for seeking).
+    - Enables caching for performance.
+    """
     service = ConversionService(db, current_user)
     conversion = service.get_conversion_by_id(conversion_id)
     
@@ -99,7 +122,7 @@ def stream_audio(
             detail="Audio file not found"
         )
     
-    # Determine media type
+    # Detect file type for streaming
     media_type = "audio/wav"
     if file_path.suffix.lower() == ".mp3":
         media_type = "audio/mpeg"
@@ -114,8 +137,8 @@ def stream_audio(
         file_path,
         media_type=media_type,
         headers={
-            "Content-Disposition": "inline",
-            "Accept-Ranges": "bytes",  # Enable range requests for better streaming
+            "Content-Disposition": "inline",  # Always play in-browser
+            "Accept-Ranges": "bytes",         # Allow seeking/partial playback
             "Cache-Control": "public, max-age=3600"  # Cache for 1 hour
         }
     )
@@ -126,7 +149,11 @@ def delete_conversion_route(
     current_user: User = Depends(auth_service.get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    """Delete a conversion."""
+    """
+    Delete a specific conversion by ID.
+    - Removes metadata from the database.
+    - Also removes the audio file (handled in service).
+    """
     service = ConversionService(db, current_user)
     service.delete_conversion(conversion_id)
     return None
