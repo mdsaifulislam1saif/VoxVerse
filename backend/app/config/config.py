@@ -7,42 +7,52 @@ import torch
 # Load environment variables from .env file
 load_dotenv()
 
+
 class Settings:
     # Base directory
-    BASE_DIR: str = Path(__file__).resolve().parent.parent
+    BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
     # Application settings
-    APP_NAME: str = "Realistic Audio Generator"
+    APP_NAME: str = os.getenv("APP_NAME", "Realistic Audio Generator")
+    APP_VERSION: str = os.getenv("APP_VERSION", "1.0.0")
+    DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
     # Security settings
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-for-development")
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: str = 30
+    SECRET_KEY: str = os.getenv(
+        "SECRET_KEY", "your-secret-key-for-development"
+    )
+    ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
+        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
+    )
 
     # Database settings
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
     # File storage
-    AUDIO_DIR: str = BASE_DIR / "temp" / "audio"
+    AUDIO_DIR: Path = BASE_DIR / "temp" / "audio"
+    AUDIO_OUTPUT_DIR: Path = BASE_DIR / "audio_output"
 
     # Ensure directories exist
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+    AUDIO_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     # CORS (Cross-Origin Resource Sharing)
-    ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:5173",   # React + Vite
-        "http://localhost:3000",   # React CRA
-        "http://localhost:8000"    # FastAPI docs
-    ]
+    ALLOWED_ORIGINS: List[str] = os.getenv(
+        "ALLOWED_ORIGINS",
+        "http://localhost:5173,http://localhost:3000,http://localhost:8000"
+    ).split(",")
+
     # Device settings
-    DEVICE: str = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    DEVICE: str = str(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     # Google Gemini API Configuration
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    
+
     # Maximum text length for summarization (characters)
     MAX_SUMMARIZATION_LENGTH: int = 50000
-    
+
     # Audio output directory (where TTS files are saved)
     AUDIO_OUTPUT_DIR: Path = Path("audio_output")
     
