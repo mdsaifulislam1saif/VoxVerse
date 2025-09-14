@@ -2,9 +2,7 @@ import { User, Mail, Calendar } from 'lucide-react';
 
 const ProfileInfo = ({ user }) => (
   <div className="p-6">
-    {/* Section Title */}
     <h2 className="text-xl font-bold text-gray-800 mb-6">Profile Information</h2>
-    {/* Grid layout for profile fields */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Username */}
       <InputField
@@ -36,7 +34,6 @@ const ProfileInfo = ({ user }) => (
 
 const InputField = ({ icon, label, value }) => (
   <div>
-    {/* Field Label */}
     <label className="block text-sm font-medium text-gray-700 mb-2">
       {icon} {label}
     </label>

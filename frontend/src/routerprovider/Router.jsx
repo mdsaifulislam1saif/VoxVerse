@@ -8,7 +8,7 @@ import LoginForm from "../components/auth/LoginForm";
 import RegisterForm from "../components/auth/RegisterForm";
 import { ROUTES } from "../config/config";
 
-// Define the application's routing structure using React Router v6
+// Define the application's routing structure using React Router 
 const router = createBrowserRouter([
   {
     path: ROUTES.HOME,    // Base path for the app

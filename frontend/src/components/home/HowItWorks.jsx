@@ -8,7 +8,7 @@ const HowItWorks = () => {
           Simple steps to convert your text to audio in minutes.
         </p>
       </div>
-      {/* 3-Step Grid */}
+      {/* 3-step Working view*/}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Step 1 */}
         <div className="text-center">

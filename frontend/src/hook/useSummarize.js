@@ -9,6 +9,7 @@ export const useSummarize = () => {
   const [showSummary, setShowSummary] = useState(true);
   const [summarizeLoading, setSummarizeLoading] = useState(false);
   const [summarizeProgress, setSummarizeProgress] = useState(0);
+  
   // Effect to simulate a progress bar while summarization is in progress
   useEffect(() => {
     let interval;

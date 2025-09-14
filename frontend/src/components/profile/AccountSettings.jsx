@@ -2,7 +2,7 @@ import { Settings } from 'lucide-react';
 
 const AccountSettings = () => (
   <div className="border-t border-gray-200 p-6">
-    {/* Section Header */}
+    {/* Header section */}
     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
       <Settings className="h-5 w-5 mr-2" />
       Account Settings
@@ -35,7 +35,7 @@ const AccountSettings = () => (
 );
 
 const ActionCard = ({ title, description, color, actionText }) => {
-  const isRed = color === 'red'; // Determines if this is a destructive action
+  const isRed = color === 'red'; 
   return (
     <div
       className={`flex items-center justify-between p-4 rounded-lg ${

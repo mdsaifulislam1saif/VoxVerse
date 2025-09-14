@@ -1,4 +1,5 @@
 import { FileText } from 'lucide-react';
+import { ROUTES } from '../../config/config';
 
 const EmptyState = () => (
   <div className="text-center py-12">
@@ -14,7 +15,7 @@ const EmptyState = () => (
     </p>
     {/* Call-to-action button linking to converter */}
     <a
-      href="/converter"
+      href={ROUTES.CONVERTER}
       className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
     >
       <FileText className="h-5 w-5 mr-2" />

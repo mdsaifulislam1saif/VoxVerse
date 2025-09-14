@@ -2,7 +2,6 @@ import { User } from 'lucide-react';
 
 const ProfileHeader = ({ user }) => (
   <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-8">
-    {/* Container for profile picture and user info */}
     <div className="flex items-center">
       {/* Profile Icon */}
       <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mr-6">

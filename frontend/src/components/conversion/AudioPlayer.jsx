@@ -2,7 +2,6 @@ import { Play, Pause, Download, Volume2, Square } from 'lucide-react';
 import { useAudioPlayer } from '../../hook/useAudioPlayer';
 
 const AudioPlayer = ({ audioUrl }) => {
-  // Pull necessary state, refs, and functions from custom hook
   const {
     audioRef,       // Ref to <audio> element for controlling playback
     isPlaying,      // Boolean - whether audio is currently playing

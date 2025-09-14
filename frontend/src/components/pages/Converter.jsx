@@ -4,11 +4,9 @@ import { ConvertTab } from '../conversion/ConvertTab';
 import { SummarizeTab } from '../summary/SummarizeTab';
 
 const Converter = () => {
-  // State to track which tab is active: 'convert' or 'summarize'
   const [activeTab, setActiveTab] = useState('convert');
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Tabs Navigation */}
       <div className="bg-white rounded-xl shadow-lg mb-8 overflow-hidden">
         <div className="border-b border-gray-200">
           <nav className="flex">
@@ -22,7 +20,7 @@ const Converter = () => {
               }`}
             >
               <div className="flex items-center justify-center">
-                <Mic className="mr-2" size={20} /> {/* Icon */}
+                <Mic className="mr-2" size={20} />
                 Text to Audio
               </div>
             </button>

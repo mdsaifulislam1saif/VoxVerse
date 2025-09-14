@@ -2,16 +2,19 @@ import { Link } from 'react-router-dom';
 import { useLogin } from '../../hook/useLogin';
 
 const LoginForm = () => {
-  // Destructure values and functions from custom hook useLogin
-  const { 
-    username, setUsername, 
-    password, setPassword, 
-    showPassword, setShowPassword, 
-    error, loading, 
-    handleSubmit 
+const { 
+    username,          // Username input value
+    setUsername,       // Function to update username
+    password,          // Password input value
+    setPassword,       // Function to update password
+    showPassword,      // Boolean: show/hide password
+    setShowPassword,   // Function to toggle showPassword
+    error,             // Error message to display
+    loading,           // Boolean: indicates if login request is in progress
+    handleSubmit       // Function to handle form submission
   } = useLogin();
+
   return (
-    // Full-page wrapper with gradient background, centers content
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header section */}
@@ -56,7 +59,7 @@ const LoginForm = () => {
                 {showPassword ? "🙈" : "👁"}
               </button>
             </div>
-            {/* Submit button with loading state */}
+            {/* Submit button with loading */}
             <button 
               type="submit" 
               disabled={loading} 

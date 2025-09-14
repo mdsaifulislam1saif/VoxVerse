@@ -2,12 +2,11 @@ import { Upload, FileText, Image, Loader2 } from 'lucide-react';
 import { useFileUpload } from '../../hook/useFileUpload';
 
 const FileUpload = ({ setText, selectedLanguage }) => {
-  // Custom hook that manages upload state, refs, and handlers
   const {
     pdfLoading,       // boolean → true while PDF is being processed
     imageLoading,     // boolean → true while Image is being processed
-    pdfInputRef,      // ref for hidden <input> (PDF upload)
-    imageInputRef,    // ref for hidden <input> (Image upload)
+    pdfInputRef,      // ref for hidden PDF upload
+    imageInputRef,    // ref for hidden Image upload
     handleFileUpload, // function to process uploaded file
   } = useFileUpload(setText, selectedLanguage);
   return (
@@ -38,7 +37,7 @@ const FileUpload = ({ setText, selectedLanguage }) => {
                        hover:bg-blue-50 hover:border-blue-400 transition-colors"
           >
             {pdfLoading ? (
-              // Show spinner while PDF is processing
+              // Show spinnerloading while PDF is processing
               <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
             ) : (
               <>
@@ -70,7 +69,7 @@ const FileUpload = ({ setText, selectedLanguage }) => {
                        hover:bg-green-50 hover:border-green-400 transition-colors"
           >
             {imageLoading ? (
-              // Show spinner while Image is processing
+              // Show spinnerloading while Image is processing
               <Loader2 className="animate-spin h-8 w-8 text-green-500" />
             ) : (
               <>

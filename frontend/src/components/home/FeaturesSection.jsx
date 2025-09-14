@@ -3,7 +3,7 @@ import features from "./featuresData";
 const FeaturesSection = () => {
   return (
     <div className="mb-16">
-      {/* Section heading */}
+      {/* Heading section */}
       <div className="text-center mb-12">
         <h2 className="text-3xl font-bold text-gray-900 mb-4">
           Powerful Features
@@ -12,7 +12,7 @@ const FeaturesSection = () => {
           Everything you need to convert text to audio efficiently and effectively.
         </p>
       </div>
-      {/* Features grid */}
+      {/* Features */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {features.map((feature, index) => (
           <div

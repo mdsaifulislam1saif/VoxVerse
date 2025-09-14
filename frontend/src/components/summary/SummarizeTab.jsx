@@ -9,33 +9,32 @@ import LoadingOverlay from '../progress/LoadingOverlay';
 import { useTextToAudio } from '../../hook/useTextToAudio';
 
 export const SummarizeTab = () => {
-  // Hooks for summarization 
   const {
-    text,
-    setText,
-    summary,
-    selectedLanguage,
-    setSelectedLanguage,
-    selectedSummaryType,
-    setSelectedSummaryType,
-    showSummary,
-    setShowSummary,
-    summarizeLoading,
-    summarizeProgress,
-    handleSummarize,
+    text,                     // Input text from user
+    setText,                  // Function to update input text
+    summary,                  // Generated summary text
+    selectedLanguage,         // Currently selected language
+    setSelectedLanguage,      // Function to update selected language
+    selectedSummaryType,      // Type of summary (e.g., brief, detailed)
+    setSelectedSummaryType,   // Function to update summary type
+    showSummary,              // Boolean: whether summary is visible
+    setShowSummary,           // Function to toggle summary visibility
+    summarizeLoading,         // Loading state for summarization
+    summarizeProgress,        // Progress percentage for summarization
+    handleSummarize,          // Function to trigger summarization
   } = useSummarize();
-  // Hooks for text-to-audio 
+
   const {
-    audioUrl, 
-    convertTextToAudio, 
-    convertProgress, 
-    convertLoading
+    audioUrl,                 // URL of generated audio
+    convertTextToAudio,       // Function to convert text to audio
+    convertProgress,          // Progress percentage for audio conversion
+    convertLoading            // Loading state for audio conversion
   } = useTextToAudio();
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* File Upload / Text Input */}
+      {/* Left Panel: File Upload */}
       <FileUpload setText={setText} selectedLanguage={selectedLanguage} />
-      {/* Main Panel */}
+      {/* Main Panel: Summarization controls and output */}
       <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
         <h2 className="text-xl font-bold mb-4">Text to Summarize</h2>
         {/* Language and Summary Type Selectors */}
@@ -57,7 +56,7 @@ export const SummarizeTab = () => {
           className="w-full h-48 p-4 text-gray-800 border rounded-lg mb-6 resize-none
                      focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        {/* Display the generated summary */}
+        {/* Display the generated summary if available */}
         {summary && (
           <SummaryDisplay
             summary={summary}
@@ -65,18 +64,18 @@ export const SummarizeTab = () => {
             setShowSummary={setShowSummary}
           />
         )}
-        {/* Buttons to summarize text and convert summary to audio */}
+        {/* Controls for summarization and converting summary to audio */}
         <SummaryControls
           summary={summary}
-          loading={summarizeLoading || convertLoading}
+          loading={summarizeLoading || convertLoading} // Show loading if either process is active
           text={text}
-          handleSummarize={handleSummarize}
-          handleConvert={() => convertTextToAudio(summary, selectedLanguage)}
+          handleSummarize={handleSummarize}          // Button to generate summary
+          handleConvert={() => convertTextToAudio(summary, selectedLanguage)} // Button to convert summary to audio
         />
-        {/* Audio Player */}
+        {/* Audio Player for playing converted audio */}
         {audioUrl && <AudioPlayer audioUrl={audioUrl} />}
       </div>
-      {/* Loading overlays */}
+      {/* Loading overlays for async operations */}
       {summarizeLoading && (
         <LoadingOverlay
           title="Summarizing Text"

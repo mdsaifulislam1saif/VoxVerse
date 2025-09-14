@@ -14,7 +14,6 @@ const RegisterForm = () => {
     setShowConfirmPassword    // Toggles confirm password visibility
   } = useRegister();
   return (
-    // Full screen wrapper with gradient background, centers the card
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Page header */}

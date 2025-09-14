@@ -3,7 +3,7 @@ import { FileText, Loader2, Mic } from 'lucide-react';
 const SummaryControls = ({ summary, loading, text, handleSummarize, handleConvert }) => (
   <div className="mb-6">
     {!summary ? (
-      // Button for summarization
+      // summarization
       <button
         onClick={handleSummarize}
         disabled={loading || !text.trim()} // disable if loading or text is empty
@@ -19,7 +19,7 @@ const SummaryControls = ({ summary, loading, text, handleSummarize, handleConver
         Summarize
       </button>
     ) : (
-      // Button for converting summary to audio
+      // converting summary to audio
       <button
         onClick={handleConvert}
         disabled={loading}

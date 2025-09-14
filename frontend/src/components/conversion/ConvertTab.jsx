@@ -7,10 +7,8 @@ import { useTextToAudio } from '../../hook/useTextToAudio';
 import LoadingOverlay from '../progress/LoadingOverlay';
 
 export const ConvertTab = () => {
-  // Local state for text input and selected language
   const [text, setText] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
-  // Custom hook for text-to-audio conversion
   const { 
     audioUrl,         // URL of generated audio file
     convertLoading,   // Whether conversion is in progress

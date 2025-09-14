@@ -3,11 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
 
 export const useConversions = () => {
-  // Get authentication token from AuthContext
   const { token } = useAuth();
-  // State to store all conversions fetched from the server
   const [conversions, setConversions] = useState([]);
-  // State to track whether conversions are being loaded
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState(null);
   // Fetch conversions on hook mount

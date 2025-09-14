@@ -6,7 +6,6 @@ import { useConversions } from '../../hook/useHistory';
 import LoadingSpinner from '../progress/LoadingSpinner';
 
 const History = () => {
-  // Custom hook providing conversion data and actions
   const {
     conversions,      // Array of conversion objects
     loading,          // Boolean: true when fetching conversions
@@ -28,7 +27,6 @@ const History = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-white rounded-xl shadow-lg">
-        {/* Header Section */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             {/* Title */}
@@ -44,7 +42,7 @@ const History = () => {
             {conversions.length} conversion{conversions.length !== 1 ? 's' : ''} found
           </p>
         </div>
-        {/* Conversions Grid */}
+        {/* Conversions store */}
         <div className="p-6">
           {conversions.length === 0 ? (
             // Show empty state if no conversions exist

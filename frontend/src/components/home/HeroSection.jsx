@@ -20,7 +20,7 @@ const HeroSection = ({ isAuthenticated }) => {
           </span>
         </h1>
 
-        {/* Subheading / Description */}
+        {/* Subheading */}
         <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
           Convert documents, images, and text into natural-sounding audio with advanced 
           AI-powered summarization and multi-language support.

@@ -2,7 +2,7 @@ import { Eye, EyeOff } from 'lucide-react';
 
 const SummaryDisplay = ({ summary, showSummary, setShowSummary }) => (
   <div className="mb-6">
-    {/* Header with toggle button */}
+    {/* Header with toggle */}
     <div className="flex justify-between mb-2">
       <h3 className="font-semibold text-gray-800">Generated Summary</h3>
       <button

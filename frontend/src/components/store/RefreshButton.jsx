@@ -8,7 +8,6 @@ const RefreshButton = ({ onClick, loading }) => (
   >
     {/* Icon with optional spinning animation when loading */}
     <RefreshCw className={`h-5 w-5 mr-2 ${loading ? 'animate-spin' : ''}`} />
-    {/* Button label */}
     Refresh
   </button>
 );

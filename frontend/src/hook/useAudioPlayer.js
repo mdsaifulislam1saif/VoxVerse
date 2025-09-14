@@ -6,7 +6,7 @@ export const useAudioPlayer = (audioUrl) => {
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
 
-  // Setup event listeners when the component mounts or duration changes
+  // Setup event listeners when the component mounts
   useEffect(() => {
     if (!audioRef.current) return;
     const audio = audioRef.current;

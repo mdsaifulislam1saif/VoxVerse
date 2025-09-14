@@ -30,7 +30,7 @@ export const useLogin = () => {
       // Handle unexpected errors
       setError('An unexpected error occurred');
     } finally {
-      setLoading(false); // Stop loading state
+      setLoading(false); 
     }
   };
   return {
