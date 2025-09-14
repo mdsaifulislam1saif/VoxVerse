@@ -1,23 +1,21 @@
 import React from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { 
-  Mic, User, LogOut, FileText, Home, Menu, X, LogIn, UserPlus 
-} from 'lucide-react';
+import { Mic, User, LogOut, FileText, Home, Menu, X, LogIn } from 'lucide-react';
 import { ROUTES } from '../../config/config';
 import { useAuth } from '../../context/AuthContext';
 
 const Header = () => {
-  const { user, isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = React.useState(false);
-
+  const { user, isAuthenticated, logout } = useAuth(); // Auth state and logout function
+  const navigate = useNavigate(); // Hook for programmatic navigation
+  const [menuOpen, setMenuOpen] = React.useState(false); // Mobile menu toggle state
+  // Handle logout and redirect to home
   const handleLogout = () => {
     logout();
     navigate(ROUTES.HOME);
   };
-
   return (
     <header className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-200">
+      {/* Container: centers content with responsive padding */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo / Brand */}
@@ -29,47 +27,51 @@ const Header = () => {
               Text to Audio
             </h1>
           </Link>
-
-          {/* Desktop Nav */}
+          {/* Desktop Navigation (hidden on mobile) */}
           <nav className="hidden md:flex items-center space-x-4">
+            {/* Home Link */}
             <NavLink
               to={ROUTES.HOME}
               className={({ isActive }) =>
                 `flex items-center px-4 py-2 rounded-lg transition-colors ${
-                  isActive ? 'text-gray-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                  isActive
+                    ? 'text-gray-600 bg-blue-50'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                 }`
               }
             >
               <Home className="h-5 w-5 mr-2" />
               Home
             </NavLink>
-
             {isAuthenticated ? (
               <>
+                {/* Authenticated User Links */}
                 <NavLink
                   to={ROUTES.CONVERTER}
                   className={({ isActive }) =>
                     `flex items-center px-4 py-2 rounded-lg transition-colors ${
-                      isActive ? 'text-gray-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                      isActive
+                        ? 'text-gray-600 bg-blue-50'
+                        : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                     }`
                   }
                 >
                   <Mic className="h-5 w-5 mr-2" />
                   Converter
                 </NavLink>
-
                 <NavLink
                   to={ROUTES.HISTORY}
                   className={({ isActive }) =>
                     `flex items-center px-4 py-2 rounded-lg transition-colors ${
-                      isActive ? 'text-gray-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                      isActive
+                        ? 'text-gray-600 bg-blue-50'
+                        : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                     }`
                   }
                 >
                   <FileText className="h-5 w-5 mr-2" />
                   History
                 </NavLink>
-
                 <NavLink
                   to={ROUTES.PROFILE}
                   className="flex items-center text-gray-700 bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
@@ -77,7 +79,7 @@ const Header = () => {
                   <User className="h-5 w-5 mr-2" />
                   {user?.full_name || user?.username}
                 </NavLink>
-
+                {/* Logout Button */}
                 <button
                   onClick={handleLogout}
                   className="flex items-center px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -87,19 +89,17 @@ const Header = () => {
                 </button>
               </>
             ) : (
-              <>
-                <NavLink
-                  to={ROUTES.LOGIN}
-                  className="flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                >
-                  <LogIn className="h-5 w-5 mr-2" />
-                  Login
-                </NavLink>
-              </>
+              /* Login Link for guests */
+              <NavLink
+                to={ROUTES.LOGIN}
+                className="flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                <LogIn className="h-5 w-5 mr-2" />
+                Login
+              </NavLink>
             )}
           </nav>
-
-          {/* Mobile menu button */}
+          {/* Mobile Menu Toggle Button */}
           <div className="md:hidden">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -111,11 +111,11 @@ const Header = () => {
           </div>
         </div>
       </div>
-
-      {/* Mobile Menu */}
+      {/* Mobile Menu (visible when menuOpen is true) */}
       {menuOpen && (
         <div className="md:hidden border-t border-gray-200 bg-white shadow-lg">
           <nav className="p-4 space-y-2">
+            {/* Home Link */}
             <NavLink
               to={ROUTES.HOME}
               onClick={() => setMenuOpen(false)}
@@ -124,9 +124,9 @@ const Header = () => {
               <Home className="h-5 w-5 mr-2" />
               Home
             </NavLink>
-
             {isAuthenticated ? (
               <>
+                {/* Authenticated User Links */}
                 <NavLink
                   to={ROUTES.CONVERTER}
                   onClick={() => setMenuOpen(false)}
@@ -150,6 +150,7 @@ const Header = () => {
                   <User className="h-5 w-5 mr-2" />
                   {user?.full_name || user?.username}
                 </NavLink>
+                {/* Logout Button */}
                 <button
                   onClick={() => {
                     handleLogout();
@@ -162,16 +163,15 @@ const Header = () => {
                 </button>
               </>
             ) : (
-              <>
-                <NavLink
-                  to={ROUTES.LOGIN}
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                >
-                  <LogIn className="h-5 w-5 mr-2" />
-                  Login
-                </NavLink>
-              </>
+              /* Login Link for guests */
+              <NavLink
+                to={ROUTES.LOGIN}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+              >
+                <LogIn className="h-5 w-5 mr-2" />
+                Login
+              </NavLink>
             )}
           </nav>
         </div>
@@ -179,5 +179,4 @@ const Header = () => {
     </header>
   );
 };
-
 export default Header;

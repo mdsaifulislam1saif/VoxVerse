@@ -22,5 +22,4 @@ const features = [
     description: 'Download your audio files in MP3 format for offline listening.'
   }
 ];
-
 export default features;
