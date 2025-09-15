@@ -15,6 +15,8 @@ A complete end-to-end Text-to-Speech platform powered by AI, OCR, and advanced T
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://docker.com)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
+https://github.com/user-attachments/assets/b7e6786c-c786-4b83-99d4-126956bac4ea
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -386,6 +388,7 @@ npm run VoxVerse
 # or
 yarn run VoxVerse
 ```
+##### Live UI: https://vox-verse.netlify.app/
 
 ### Application Flow
 
