@@ -123,26 +123,26 @@ VoxVerse is an intelligent text-to-speech platform that converts text from vario
 ## Tech Stack
 
 ### Backend
-- **FastAPI 0.104.1**: Modern, fast web framework for building APIs
-- **SQLAlchemy 2.0.22**: SQL toolkit and Object-Relational Mapping
-- **Coqui TTS 0.26.2**: Advanced text-to-speech synthesis
-- **EasyOCR 1.7.1**: Optical character recognition for PDF and image text extraction
-- **PyMuPDF 1.26.0**: PDF document processing 
-- **Google Generative AI 0.8.5**: AI-powered text summarization
-- **PyTorch 2.3.0**: Deep learning framework for TTS models
-- **Python-JOSE 3.3.0**: JWT token handling for authentication
+- **FastAPI**: Modern, fast web framework for building APIs
+- **SQLAlchemy**: SQL toolkit and Object-Relational Mapping
+- **Coqui TTS**: Advanced text-to-speech synthesis
+- **EasyOCR**: Optical character recognition for PDF and image text extraction
+- **PyMuPDF**: PDF document processing 
+- **Google Generative AI**: AI-powered text summarization
+- **PyTorch**: Deep learning framework for TTS models
+- **Python-JOSE**: JWT token handling for authentication
 
 ### Frontend
-- **React 19.1.1**: Modern JavaScript library for building user interfaces
-- **Vite 7.1.2**: Next-generation frontend build tool
-- **TailwindCSS 3.4.17**: Utility-first CSS framework
-- **React Router DOM 7.8.2**: Declarative routing for React
-- **Lucide React 0.544.0**: Beautiful icon library
+- **React**: Modern JavaScript library for building user interfaces
+- **Vite**: Next-generation frontend build tool
+- **TailwindCSS**: Utility-first CSS framework
+- **React Router DOM**: Declarative routing for React
+- **Lucide React**: Beautiful icon library
 
 ### DevOps & Deployment
 - **Docker**: Containerization platform
 - **Docker Compose**: Multi-container deployment
-- **Uvicorn 0.23.2**: Lightning-fast ASGI server
+- **Uvicorn**: Lightning-fast ASGI server
 - **SQLite**: Lightweight database for development
 - **Environment Variables**: Secure configuration management
 
@@ -150,8 +150,8 @@ VoxVerse is an intelligent text-to-speech platform that converts text from vario
 
 Before setting up the project, ensure you have:
 
-- **Python 3.8+** installed
-- **Node.js 16+** and **npm/yarn** for frontend development
+- **Python 3.13+** installed
+- **Node.js 22.12+** and **npm/yarn** for frontend development
 - **Docker** and **Docker Compose** (for containerized deployment)
 - **API Keys** for the following services:
   - [Google AI Studio](https://aistudio.google.com/app/apikey) - Gemini API access
