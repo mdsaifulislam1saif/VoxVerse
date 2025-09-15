@@ -7,7 +7,6 @@ import torch
 # Load environment variables from .env file
 load_dotenv()
 
-
 class Settings:
     # Base directory
     BASE_DIR: Path = Path(__file__).resolve().parent.parent
@@ -26,17 +25,15 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
         os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
     )
-
+    
     # Database settings
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
     # File storage
     AUDIO_DIR: Path = BASE_DIR / "temp" / "audio"
-    AUDIO_OUTPUT_DIR: Path = BASE_DIR / "audio_output"
 
     # Ensure directories exist
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
-    AUDIO_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     # CORS (Cross-Origin Resource Sharing)
     ALLOWED_ORIGINS: List[str] = os.getenv(
