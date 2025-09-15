@@ -23,7 +23,7 @@ const Header = () => {
               <Mic className="h-5 w-5 text-white" />
             </div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Text to Audio
+              VoxVerse
             </h1>
           </Link>
           {/* Desktop Navigation (hidden on mobile) */}

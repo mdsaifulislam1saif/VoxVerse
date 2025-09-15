@@ -6,26 +6,26 @@ const HeroSection = ({ isAuthenticated }) => {
   return (
     <div className="text-center mb-16">
       {/* Logo & Heading Section */}
-      <div className="mb-8">
-        {/* Logo circle with mic icon */}
-        <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-6">
-          <Mic className="w-10 h-10 text-white" />
-        </div>
+     <div className="mb-8">
+  {/* Logo circle with mic icon */}
+  <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-6">
+    <Mic className="w-10 h-10 text-white" />
+  </div>
 
         {/* Main Heading */}
         <h1 className="text-5xl font-bold text-gray-900 mb-4">
-          Transform Text into{' '}
+          Welcome to{' '}
           <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Audio
+            VoxVerse
           </span>
         </h1>
 
         {/* Subheading */}
         <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          Convert documents, images, and text into natural-sounding audio with advanced 
-          AI-powered summarization and multi-language support.
+          AI-powered text-to-speech that converts PDFs, images, and text into natural, high-quality audio with summarization and multi-language support.
         </p>
       </div>
+
       {/* Call-To-Action Buttons */}
       <div className="flex flex-wrap justify-center gap-4">
         {isAuthenticated ? (
