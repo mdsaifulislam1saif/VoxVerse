@@ -45,7 +45,7 @@ class Settings:
     DEVICE: str = str(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     # Google Gemini API Configuration
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "AIzaSyD-1hi4Lk2IPCh_m6414c4Og7yjSw4d2Mo")
 
     # Maximum text length for summarization (characters)
     MAX_SUMMARIZATION_LENGTH: int = 50000
@@ -100,7 +100,7 @@ class Settings:
     }
 
     # Model
-    GEMINI_MODEL = 'gemini-1.5-flash'
+    GEMINI_MODEL = 'gemini-2.0-flash'
 
     # Instructions based on language
     LANGUAGE_INSTRUCTIONS = {

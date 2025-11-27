@@ -216,3 +216,7 @@ app.db
 
 # setup file 
 setup.py
+.coveragerc
+tests
+inputs
+test_ocr.py
