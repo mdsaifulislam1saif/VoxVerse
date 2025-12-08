@@ -33,3 +33,7 @@ app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(convert.router, prefix="/convert", tags=["conversions"])
 app.include_router(summarize.router, prefix="/summarize", tags=["summarization"])
 app.include_router(extract.router, prefix="/extract", tags=["extraction"])
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}

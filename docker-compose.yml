@@ -1,7 +1,9 @@
 services:
   backend:
-    image: backend
-    container_name: VoxVerse-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
     ports:
       - "8000:8000"
     volumes:
@@ -9,22 +11,36 @@ services:
       - uploads_data:/app/uploads
       - temp_data:/app/temp
       - output_data:/app/output
-    environment:
-      DATABASE_URL: sqlite:///./data/app.db
-      ALLOWED_ORIGINS: "http://localhost:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - voxverse-network
 
   frontend:
-    image: frontend
-    container_name: VoxVerse-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000
+      VITE_API_BASE_URL: http://localhost:8000
+    networks:
+      - voxverse-network
 
 volumes:
   sqlite_data:
   uploads_data:
   temp_data:
   output_data:
+
+networks:
+  voxverse-network:
+    driver: bridge

@@ -152,8 +152,8 @@ VoxVerse is an intelligent text-to-speech platform that converts text from vario
 
 Before setting up the project, ensure you have:
 
-- **Python 3.13+** installed
-- **Node.js 22.12+** and **npm/yarn** for frontend development
+- **Python 3.11** installed
+- **Node.js 25.2+** and **npm** for frontend development
 - **Docker** and **Docker Compose** (for containerized deployment)
 - **API Keys** for the following services:
   - [Google AI Studio](https://aistudio.google.com/app/apikey) - Gemini API access
@@ -163,7 +163,7 @@ Before setting up the project, ensure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Saif-000001/VoxVerse.git
+git clone https://github.com/mdsaifulislam1saif/VoxVerse.git
 cd VoxVerse
 ```
 
@@ -479,10 +479,14 @@ Once the server is running, visit:
 # Build backend image
 cd backend
 docker build -t backend .
+# Run backend
+docker run -p 8000:8000 backend
 
 # Build frontend image
 cd frontend
 docker build -t frontend .
+# Run frontend
+docker run -p 3000:3000 frontend
 
 # Run with compose
 docker-compose up --build
